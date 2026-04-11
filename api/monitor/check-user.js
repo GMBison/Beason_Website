@@ -1,4 +1,4 @@
-const { handleCors, sendJson, ensureAuthorized, readBody, findLearner } = require("../_lib/beason-monitor");
+const { handleCors, sendJson, ensureAuthorized, readBody, getDeviceStatus } = require("../_lib/beason-monitor");
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -13,11 +13,11 @@ module.exports = async (req, res) => {
 
   try {
     const body = await readBody(req);
-    const learner = await findLearner(body.user || {});
+    const status = await getDeviceStatus(body.user || {});
     sendJson(res, 200, {
       ok: true,
-      deactivated: String(learner?.status || "active").toLowerCase() === "deactivated",
-      reason: learner?.deactivation_reason || "",
+      deactivated: !!status?.deactivated,
+      reason: status?.reason || "",
     });
   } catch (error) {
     sendJson(res, 500, { ok: false, error: error.message || "Check failed." });

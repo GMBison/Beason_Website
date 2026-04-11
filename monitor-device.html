@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BEASON Device Detail</title>
+  <style>
+    :root {
+      --bg: #f8faf2;
+      --card: rgba(255,255,255,0.94);
+      --text: #172033;
+      --muted: #677389;
+      --line: rgba(23, 32, 51, 0.09);
+      --accent: #dcff43;
+      --accent-deep: #c8ef1f;
+      --danger: #ff6b3d;
+      --danger-soft: #fff2ed;
+      --ok: #1ea55d;
+      --ok-soft: #e8f7ee;
+      --shadow: 0 24px 60px rgba(22, 31, 52, 0.1);
+      font-family: "Inter", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(220,255,67,0.32), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+    }
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    .hero, .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .hero {
+      padding: 28px;
+      margin-bottom: 22px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+    }
+    p { margin: 0; color: var(--muted); line-height: 1.7; }
+    .topbar, .action-row, .stat-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .topbar { margin-top: 18px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-weight: 800;
+      font-size: 12px;
+      gap: 8px;
+    }
+    .pill.online { background: var(--ok-soft); color: var(--ok); border-color: #bbe3cb; }
+    .pill.off { background: var(--danger-soft); color: #b24d2a; border-color: #ffc9b8; }
+    button, a {
+      font: inherit;
+      text-decoration: none;
+    }
+    .button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .primary { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%); color: var(--text); }
+    .secondary { background: #fff; border: 1px solid var(--line); color: var(--text); }
+    .danger { background: var(--danger); color: #fff; }
+    .success { background: var(--ok-soft); color: var(--ok); border: 1px solid #bbe3cb; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .panel {
+      padding: 22px;
+    }
+    .user-card, .attempt {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      background: #fff;
+    }
+    .list {
+      display: grid;
+      gap: 14px;
+    }
+    .muted { color: var(--muted); }
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="eyebrow">Device Detail</div>
+      <h1 id="title">Loading device…</h1>
+      <p id="subtitle">Pulling linked learners, scores, and status for this HWID.</p>
+      <div class="topbar">
+        <a class="button secondary" href="/monitor.html">Back to monitor</a>
+        <button id="refreshBtn" class="button secondary">Refresh</button>
+        <button id="toggleBtn" class="button danger">Deactivate device</button>
+      </div>
+      <div class="stat-row" id="statusRow" style="margin-top:16px;"></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="eyebrow">System Users</div>
+        <div id="usersList" class="list muted">Loading users…</div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Recent Scores</div>
+        <div id="attemptsList" class="list muted">Loading attempts…</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const hwid = params.get("hwid") || "";
+    const title = document.getElementById("title");
+    const subtitle = document.getElementById("subtitle");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const toggleBtn = document.getElementById("toggleBtn");
+    const statusRow = document.getElementById("statusRow");
+    const usersList = document.getElementById("usersList");
+    const attemptsList = document.getElementById("attemptsList");
+    let deviceCache = null;
+
+    function getSecret() {
+      return localStorage.getItem("beason_monitor_admin_secret") || "";
+    }
+
+    async function api(path, body = {}) {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Beason-Secret": getSecret(),
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Request failed.");
+      return data;
+    }
+
+    function formatDate(value) {
+      return value ? new Date(value).toLocaleString() : "-";
+    }
+
+    function render(device) {
+      deviceCache = device;
+      title.textContent = device.hwid || "Unknown device";
+      subtitle.textContent = `Last seen ${formatDate(device.lastSeenAt)}. This page groups every local user and attempt reported by this machine.`;
+      statusRow.innerHTML = `
+        <span class="pill ${device.online ? "online" : "off"}">${device.online ? "Online" : "Offline"}</span>
+        <span class="pill ${device.deactivated ? "off" : ""}">${device.deactivated ? "Deactivated" : "Active"}</span>
+        <span class="pill">${device.userCount || 0} user${device.userCount === 1 ? "" : "s"}</span>
+        <span class="pill">${device.stats?.attemptCount || 0} attempts</span>
+        <span class="pill">Best ${device.stats?.bestScore || 0}/400</span>
+      `;
+      toggleBtn.textContent = device.deactivated ? "Reactivate device" : "Deactivate device";
+      toggleBtn.className = `button ${device.deactivated ? "success" : "danger"}`;
+
+      usersList.innerHTML = (device.users || []).length
+        ? device.users.map((user) => `
+            <div class="user-card">
+              <strong>${user.displayName || user.username || "Unknown user"}</strong>
+              <div class="muted">Username: ${user.username || "-"}</div>
+              <div class="muted">Best: ${user.bestScore || 0}/400</div>
+              <div class="muted">Latest: ${user.latestScore || 0}/400</div>
+              <div class="muted">Attempts: ${user.attemptCount || 0}</div>
+              <div class="muted">Last seen: ${formatDate(user.lastSeenAt)}</div>
+            </div>
+          `).join("")
+        : '<div class="muted">No signed-in learner profiles have reported from this device yet.</div>';
+
+      attemptsList.innerHTML = (device.attempts || []).length
+        ? device.attempts.map((attempt) => `
+            <div class="attempt">
+              <strong>${(attempt.examBody || "").toUpperCase()} · ${attempt.scoreOver400 || 0}/400</strong>
+              <div class="muted">${attempt.userDisplayName || "Unknown user"}</div>
+              <div class="muted">${attempt.modeLabel || "-"} · ${attempt.yearLabel || "-"}</div>
+              <div class="muted">${formatDate(attempt.submittedAt)} · ${attempt.correct || 0}/${attempt.total || 0} (${attempt.pct || 0}%)</div>
+            </div>
+          `).join("")
+        : '<div class="muted">No scores reported for this device yet.</div>';
+    }
+
+    async function loadDevice() {
+      if (!hwid) {
+        title.textContent = "No HWID selected";
+        subtitle.textContent = "Go back to the main monitor and open a device from the table.";
+        usersList.textContent = "Nothing to show.";
+        attemptsList.textContent = "Nothing to show.";
+        toggleBtn.disabled = true;
+        return;
+      }
+      const data = await api("/api/monitor/device", { hwid });
+      render(data.device);
+    }
+
+    refreshBtn.addEventListener("click", async () => {
+      try {
+        await loadDevice();
+      } catch (error) {
+        alert(error.message || "Could not refresh device.");
+      }
+    });
+
+    toggleBtn.addEventListener("click", async () => {
+      if (!deviceCache) return;
+      try {
+        if (deviceCache.deactivated) {
+          await api("/api/monitor/activate", { hwid: deviceCache.hwid });
+        } else {
+          const reason = prompt("Reason for deactivation:", deviceCache.deactivationReason || "Misuse detected") || "Misuse detected";
+          await api("/api/monitor/deactivate", { hwid: deviceCache.hwid, reason });
+        }
+        await loadDevice();
+      } catch (error) {
+        alert(error.message || "Device action failed.");
+      }
+    });
+
+    loadDevice().catch((error) => {
+      title.textContent = "Device load failed";
+      subtitle.textContent = error.message || "Could not load the selected device.";
+      usersList.textContent = "Could not load users.";
+      attemptsList.textContent = "Could not load attempts.";
+    });
+  </script>
+</body>
+</html>

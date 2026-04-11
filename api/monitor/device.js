@@ -1,4 +1,4 @@
-const { handleCors, sendJson, ensureAuthorized, readBody, setLearnerStatus } = require("../_lib/beason-monitor");
+const { handleCors, sendJson, ensureAuthorized, readBody, getDeviceDetail } = require("../_lib/beason-monitor");
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -13,17 +13,13 @@ module.exports = async (req, res) => {
 
   try {
     const body = await readBody(req);
-    const learners = await setLearnerStatus({
-      username: body.username,
-      hwid: body.hwid,
-      status: "active",
-    });
-    if (!learners || (Array.isArray(learners) && !learners.length)) {
+    const device = await getDeviceDetail(body.hwid);
+    if (!device) {
       sendJson(res, 404, { ok: false, error: "Device not found." });
       return;
     }
-    sendJson(res, 200, { ok: true });
+    sendJson(res, 200, { ok: true, device });
   } catch (error) {
-    sendJson(res, 500, { ok: false, error: error.message || "Activate failed." });
+    sendJson(res, 500, { ok: false, error: error.message || "Could not load device." });
   }
 };

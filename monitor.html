@@ -16,6 +16,7 @@
       --danger: #ff6b3d;
       --danger-soft: #fff2ed;
       --ok: #1ea55d;
+      --ok-soft: #e8f7ee;
       --shadow: 0 24px 60px rgba(22, 31, 52, 0.1);
       font-family: "Inter", system-ui, sans-serif;
     }
@@ -28,7 +29,7 @@
         linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
     }
     .page {
-      max-width: 1440px;
+      max-width: 1480px;
       margin: 0 auto;
       padding: 28px;
     }
@@ -41,9 +42,9 @@
     }
     .hero {
       display: grid;
-      grid-template-columns: 1.3fr 1fr;
+      grid-template-columns: 1.35fr 1fr;
       gap: 18px;
-      padding: 26px;
+      padding: 28px;
       margin-bottom: 22px;
     }
     .eyebrow {
@@ -51,12 +52,12 @@
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 800;
       margin-bottom: 12px;
     }
     h1 {
       margin: 0 0 12px;
-      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
       line-height: 0.98;
       letter-spacing: -0.05em;
     }
@@ -67,7 +68,7 @@
       flex-wrap: wrap;
       margin-top: 18px;
     }
-    input, button {
+    input, button, a {
       font: inherit;
     }
     input {
@@ -78,20 +79,24 @@
       background: #fff;
       color: var(--text);
     }
-    button {
+    button, .linkbtn {
       border: 0;
       border-radius: 16px;
       padding: 14px 18px;
       font-weight: 800;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .primary { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%); }
-    .secondary { background: #fff; border: 1px solid var(--line); }
+    .primary { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%); color: var(--text); }
+    .secondary { background: #fff; border: 1px solid var(--line); color: var(--text); }
     .danger { background: var(--danger); color: #fff; }
-    .success { background: #e8f7ee; color: var(--ok); border: 1px solid #bbe3cb; }
+    .success { background: var(--ok-soft); color: var(--ok); border: 1px solid #bbe3cb; }
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
     }
     .stat { padding: 18px; }
@@ -103,7 +108,7 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 1.75fr 1fr;
+      grid-template-columns: 1.8fr 0.95fr;
       gap: 22px;
     }
     .panel { padding: 22px; }
@@ -132,40 +137,47 @@
       background: #fff;
       font-size: 12px;
       font-weight: 800;
+      gap: 8px;
     }
     .pill.off {
       background: var(--danger-soft);
       color: #b24d2a;
       border-color: #ffc9b8;
     }
-    .muted { color: var(--muted); }
-    .detail-grid {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 18px;
+    .pill.online {
+      background: var(--ok-soft);
+      color: var(--ok);
+      border-color: #bbe3cb;
     }
-    .attempt-list {
+    .muted { color: var(--muted); }
+    .mini-grid {
       display: grid;
       gap: 12px;
     }
-    .attempt {
+    .mini-card {
       border: 1px solid var(--line);
-      border-radius: 20px;
+      border-radius: 22px;
+      padding: 16px;
       background: #fff;
-      padding: 14px;
     }
-    .attempt strong {
+    .mini-card strong {
       display: block;
-      margin-bottom: 6px;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
     }
     .action-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
-    @media (max-width: 1080px) {
+    .hwid-link {
+      color: var(--text);
+      font-weight: 800;
+      text-decoration: none;
+    }
+    @media (max-width: 1180px) {
       .hero, .layout { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -174,8 +186,8 @@
     <section class="hero">
       <div>
         <div class="eyebrow">BEASON Admin Monitor</div>
-        <h1>Watch learner progress and control misuse in one place.</h1>
-        <p>This dashboard reads activity sent by the BEASON CBT app whenever a learner is online. You can inspect names, HWIDs, scores, and deactivate a learner instantly.</p>
+        <h1>Track devices, not duplicate usernames.</h1>
+        <p>The app now reports device presence by HWID whenever BEASON opens online or reconnects later. Click any HWID to inspect linked users, attempts, and control access for that device.</p>
         <div class="controls">
           <input id="secretInput" type="password" placeholder="Enter admin secret" />
           <button id="unlockBtn" class="primary">Unlock Monitor</button>
@@ -184,8 +196,12 @@
       </div>
       <div class="stats">
         <div class="stat">
-          <div class="eyebrow">Learners</div>
-          <strong id="usersCount">0</strong>
+          <div class="eyebrow">Devices</div>
+          <strong id="devicesCount">0</strong>
+        </div>
+        <div class="stat">
+          <div class="eyebrow">Online</div>
+          <strong id="onlineCount">0</strong>
         </div>
         <div class="stat">
           <div class="eyebrow">Attempts</div>
@@ -200,26 +216,39 @@
 
     <section class="layout">
       <div class="panel">
-        <div class="eyebrow">Learner Table</div>
+        <div class="eyebrow">Device Table</div>
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Username</th>
               <th>HWID</th>
-              <th>Scores</th>
               <th>Status</th>
+              <th>Users</th>
+              <th>Scores</th>
+              <th>Last seen</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody id="usersBody">
-            <tr><td colspan="6" class="muted">Unlock the monitor to load learners.</td></tr>
+          <tbody id="devicesBody">
+            <tr><td colspan="6" class="muted">Unlock the monitor to load devices.</td></tr>
           </tbody>
         </table>
       </div>
       <div class="panel">
-        <div class="eyebrow">Learner Detail</div>
-        <div id="detailPane" class="muted">Pick a learner to inspect recent activity.</div>
+        <div class="eyebrow">What Opens</div>
+        <div class="mini-grid">
+          <div class="mini-card">
+            <strong>HWID-first view</strong>
+            <div class="muted">Each device appears once, even if you created multiple local users on the same machine.</div>
+          </div>
+          <div class="mini-card">
+            <strong>Online or offline</strong>
+            <div class="muted">A device is marked online when it has reported in recently, and offline after the heartbeat window passes.</div>
+          </div>
+          <div class="mini-card">
+            <strong>Click through</strong>
+            <div class="muted">Open the HWID page to inspect linked usernames, attempt history, and apply device-wide deactivation.</div>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -228,11 +257,11 @@
     const secretInput = document.getElementById("secretInput");
     const unlockBtn = document.getElementById("unlockBtn");
     const refreshBtn = document.getElementById("refreshBtn");
-    const usersCount = document.getElementById("usersCount");
+    const devicesCount = document.getElementById("devicesCount");
+    const onlineCount = document.getElementById("onlineCount");
     const attemptsCount = document.getElementById("attemptsCount");
     const deactivatedCount = document.getElementById("deactivatedCount");
-    const usersBody = document.getElementById("usersBody");
-    const detailPane = document.getElementById("detailPane");
+    const devicesBody = document.getElementById("devicesBody");
     let overviewCache = null;
 
     function getSecret() {
@@ -257,89 +286,74 @@
       return value ? new Date(value).toLocaleString() : "-";
     }
 
-    function renderDetail(key) {
-      const user = (overviewCache?.users || []).find((entry) => entry.key === key);
-      if (!user) {
-        detailPane.textContent = "Pick a learner to inspect recent activity.";
-        detailPane.className = "muted";
-        return;
-      }
+    function openDevicePage(hwid) {
+      const encoded = encodeURIComponent(hwid || "");
+      window.location.href = `/monitor-device.html?hwid=${encoded}`;
+    }
 
-      detailPane.className = "";
-      detailPane.innerHTML = `
-        <div class="detail-grid">
-          <div><strong>${user.displayName || user.username || "Unknown User"}</strong></div>
-          <div class="muted">Username: ${user.username || "-"}</div>
-          <div class="muted">HWID: ${user.hwid || "-"}</div>
-          <div class="muted">Last seen: ${formatDate(user.lastSeenAt)}</div>
-          <div class="muted">Status: ${user.deactivated ? "Deactivated" : "Active"}</div>
-          ${user.deactivationReason ? `<div class="muted">Reason: ${user.deactivationReason}</div>` : ""}
-        </div>
-        <div class="attempt-list">
-          ${(user.attempts || []).length ? user.attempts.map((attempt) => `
-            <div class="attempt">
-              <strong>${(attempt.examBody || "").toUpperCase()} • ${attempt.scoreOver400 || 0}/400</strong>
-              <div class="muted">${attempt.modeLabel || "-"} • ${attempt.yearLabel || "-"} • ${formatDate(attempt.submittedAt)}</div>
-              <div class="muted">Accuracy: ${attempt.correct || 0}/${attempt.total || 0} (${attempt.pct || 0}%)</div>
-            </div>
-          `).join("") : '<div class="muted">No attempts reported yet.</div>'}
-        </div>
-      `;
+    async function toggleDevice(device, deactivate) {
+      const reason = deactivate
+        ? (prompt("Reason for deactivation:", device.deactivationReason || "Misuse detected") || "Misuse detected")
+        : "";
+      await api(deactivate ? "/api/monitor/deactivate" : "/api/monitor/activate", {
+        hwid: device.hwid,
+        reason,
+      });
+      await refreshOverview();
     }
 
     function renderOverview(data) {
       overviewCache = data;
-      usersCount.textContent = String(data?.totals?.users || 0);
+      devicesCount.textContent = String(data?.totals?.devices || 0);
+      onlineCount.textContent = String(data?.totals?.online || 0);
       attemptsCount.textContent = String(data?.totals?.attempts || 0);
       deactivatedCount.textContent = String(data?.totals?.deactivated || 0);
 
-      const users = data?.users || [];
-      if (!users.length) {
-        usersBody.innerHTML = '<tr><td colspan="6" class="muted">No learner activity yet.</td></tr>';
-        renderDetail("");
+      const devices = data?.devices || [];
+      if (!devices.length) {
+        devicesBody.innerHTML = '<tr><td colspan="6" class="muted">No device activity yet.</td></tr>';
         return;
       }
 
-      usersBody.innerHTML = users.map((user) => `
+      devicesBody.innerHTML = devices.map((device) => `
         <tr>
-          <td><button class="secondary" data-detail="${user.key}">${user.displayName || user.username || "Unknown User"}</button></td>
-          <td>${user.username || "-"}</td>
-          <td>${user.hwid || "-"}</td>
-          <td>Best: ${user.stats?.bestScore || 0}/400<br><span class="muted">Latest: ${user.stats?.latestScore || 0}/400</span></td>
-          <td><span class="pill ${user.deactivated ? "off" : ""}">${user.deactivated ? "Deactivated" : "Active"}</span></td>
+          <td>
+            <a class="hwid-link" href="/monitor-device.html?hwid=${encodeURIComponent(device.hwid)}">${device.hwid || "-"}</a>
+          </td>
+          <td>
+            <div class="action-row">
+              <span class="pill ${device.online ? "online" : "off"}">${device.online ? "Online" : "Offline"}</span>
+              <span class="pill ${device.deactivated ? "off" : ""}">${device.deactivated ? "Deactivated" : "Active"}</span>
+            </div>
+          </td>
+          <td>${device.userCount || 0}<br><span class="muted">${(device.usernames || []).slice(0, 2).join(", ") || "No sign-ins yet"}</span></td>
+          <td>Best: ${device.stats?.bestScore || 0}/400<br><span class="muted">Latest: ${device.stats?.latestScore || 0}/400</span></td>
+          <td>${formatDate(device.lastSeenAt)}</td>
           <td class="action-row">
-            ${user.deactivated
-              ? `<button class="success" data-action="activate" data-key="${user.key}">Reactivate</button>`
-              : `<button class="danger" data-action="deactivate" data-key="${user.key}">Deactivate</button>`}
+            <button class="secondary" data-detail="${encodeURIComponent(device.hwid)}">Open</button>
+            ${device.deactivated
+              ? `<button class="success" data-action="activate" data-hwid="${encodeURIComponent(device.hwid)}">Reactivate</button>`
+              : `<button class="danger" data-action="deactivate" data-hwid="${encodeURIComponent(device.hwid)}">Deactivate</button>`}
           </td>
         </tr>
       `).join("");
 
-      usersBody.querySelectorAll("[data-detail]").forEach((button) => {
-        button.addEventListener("click", () => renderDetail(button.dataset.detail));
+      devicesBody.querySelectorAll("[data-detail]").forEach((button) => {
+        button.addEventListener("click", () => openDevicePage(decodeURIComponent(button.dataset.detail)));
       });
 
-      usersBody.querySelectorAll("[data-action]").forEach((button) => {
+      devicesBody.querySelectorAll("[data-action]").forEach((button) => {
         button.addEventListener("click", async () => {
-          const user = users.find((entry) => entry.key === button.dataset.key);
-          if (!user) return;
-          const deactivate = button.dataset.action === "deactivate";
-          const reason = deactivate ? (prompt("Reason for deactivation:", user.deactivationReason || "Misuse detected") || "Misuse detected") : "";
+          const hwid = decodeURIComponent(button.dataset.hwid || "");
+          const device = (overviewCache?.devices || []).find((entry) => entry.hwid === hwid);
+          if (!device) return;
           try {
-            await api(deactivate ? "/api/monitor/deactivate" : "/api/monitor/activate", {
-              username: user.username,
-              hwid: user.hwid,
-              reason
-            });
-            await refreshOverview();
-            renderDetail(user.key);
+            await toggleDevice(device, button.dataset.action === "deactivate");
           } catch (error) {
             alert(error.message || "Action failed.");
           }
         });
       });
-
-      renderDetail(users[0].key);
     }
 
     async function refreshOverview() {
@@ -347,7 +361,7 @@
         const data = await api("/api/monitor/overview");
         renderOverview(data);
       } catch (error) {
-        usersBody.innerHTML = `<tr><td colspan="6" class="muted">${error.message || "Could not load monitor."}</td></tr>`;
+        devicesBody.innerHTML = `<tr><td colspan="6" class="muted">${error.message || "Could not load monitor."}</td></tr>`;
       }
     }
 

@@ -13,14 +13,14 @@ module.exports = async (req, res) => {
 
   try {
     const body = await readBody(req);
-    const learner = await setLearnerStatus({
+    const learners = await setLearnerStatus({
       username: body.username,
       hwid: body.hwid,
       reason: body.reason,
       status: "deactivated",
     });
-    if (!learner) {
-      sendJson(res, 404, { ok: false, error: "Learner not found." });
+    if (!learners || (Array.isArray(learners) && !learners.length)) {
+      sendJson(res, 404, { ok: false, error: "Device not found." });
       return;
     }
     sendJson(res, 200, { ok: true });
