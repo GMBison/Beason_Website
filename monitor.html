@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BEASON Monitor</title>
+  <style>
+    :root {
+      --bg: #f8faf2;
+      --card: rgba(255,255,255,0.94);
+      --text: #172033;
+      --muted: #677389;
+      --line: rgba(23, 32, 51, 0.09);
+      --accent: #dcff43;
+      --accent-deep: #c8ef1f;
+      --danger: #ff6b3d;
+      --danger-soft: #fff2ed;
+      --ok: #1ea55d;
+      --shadow: 0 24px 60px rgba(22, 31, 52, 0.1);
+      font-family: "Inter", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(220,255,67,0.32), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+    }
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    .hero, .panel, .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 18px;
+      padding: 26px;
+      margin-bottom: 22px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+    }
+    p { margin: 0; color: var(--muted); line-height: 1.7; }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    input, button {
+      font: inherit;
+    }
+    input {
+      min-width: 280px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 14px 16px;
+      background: #fff;
+      color: var(--text);
+    }
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%); }
+    .secondary { background: #fff; border: 1px solid var(--line); }
+    .danger { background: var(--danger); color: #fff; }
+    .success { background: #e8f7ee; color: var(--ok); border: 1px solid #bbe3cb; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .stat { padding: 18px; }
+    .stat strong {
+      display: block;
+      font-size: 2.2rem;
+      margin-top: 10px;
+      letter-spacing: -0.04em;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.75fr 1fr;
+      gap: 22px;
+    }
+    .panel { padding: 22px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 14px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .pill.off {
+      background: var(--danger-soft);
+      color: #b24d2a;
+      border-color: #ffc9b8;
+    }
+    .muted { color: var(--muted); }
+    .detail-grid {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .attempt-list {
+      display: grid;
+      gap: 12px;
+    }
+    .attempt {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      padding: 14px;
+    }
+    .attempt strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 1080px) {
+      .hero, .layout { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">BEASON Admin Monitor</div>
+        <h1>Watch learner progress and control misuse in one place.</h1>
+        <p>This dashboard reads activity sent by the BEASON CBT app whenever a learner is online. You can inspect names, HWIDs, scores, and deactivate a learner instantly.</p>
+        <div class="controls">
+          <input id="secretInput" type="password" placeholder="Enter admin secret" />
+          <button id="unlockBtn" class="primary">Unlock Monitor</button>
+          <button id="refreshBtn" class="secondary">Refresh</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="eyebrow">Learners</div>
+          <strong id="usersCount">0</strong>
+        </div>
+        <div class="stat">
+          <div class="eyebrow">Attempts</div>
+          <strong id="attemptsCount">0</strong>
+        </div>
+        <div class="stat">
+          <div class="eyebrow">Deactivated</div>
+          <strong id="deactivatedCount">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <div class="eyebrow">Learner Table</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>HWID</th>
+              <th>Scores</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr><td colspan="6" class="muted">Unlock the monitor to load learners.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Learner Detail</div>
+        <div id="detailPane" class="muted">Pick a learner to inspect recent activity.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const secretInput = document.getElementById("secretInput");
+    const unlockBtn = document.getElementById("unlockBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const usersCount = document.getElementById("usersCount");
+    const attemptsCount = document.getElementById("attemptsCount");
+    const deactivatedCount = document.getElementById("deactivatedCount");
+    const usersBody = document.getElementById("usersBody");
+    const detailPane = document.getElementById("detailPane");
+    let overviewCache = null;
+
+    function getSecret() {
+      return localStorage.getItem("beason_monitor_admin_secret") || "";
+    }
+
+    async function api(path, body = {}) {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Beason-Secret": getSecret(),
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Request failed.");
+      return data;
+    }
+
+    function formatDate(value) {
+      return value ? new Date(value).toLocaleString() : "-";
+    }
+
+    function renderDetail(key) {
+      const user = (overviewCache?.users || []).find((entry) => entry.key === key);
+      if (!user) {
+        detailPane.textContent = "Pick a learner to inspect recent activity.";
+        detailPane.className = "muted";
+        return;
+      }
+
+      detailPane.className = "";
+      detailPane.innerHTML = `
+        <div class="detail-grid">
+          <div><strong>${user.displayName || user.username || "Unknown User"}</strong></div>
+          <div class="muted">Username: ${user.username || "-"}</div>
+          <div class="muted">HWID: ${user.hwid || "-"}</div>
+          <div class="muted">Last seen: ${formatDate(user.lastSeenAt)}</div>
+          <div class="muted">Status: ${user.deactivated ? "Deactivated" : "Active"}</div>
+          ${user.deactivationReason ? `<div class="muted">Reason: ${user.deactivationReason}</div>` : ""}
+        </div>
+        <div class="attempt-list">
+          ${(user.attempts || []).length ? user.attempts.map((attempt) => `
+            <div class="attempt">
+              <strong>${(attempt.examBody || "").toUpperCase()} • ${attempt.scoreOver400 || 0}/400</strong>
+              <div class="muted">${attempt.modeLabel || "-"} • ${attempt.yearLabel || "-"} • ${formatDate(attempt.submittedAt)}</div>
+              <div class="muted">Accuracy: ${attempt.correct || 0}/${attempt.total || 0} (${attempt.pct || 0}%)</div>
+            </div>
+          `).join("") : '<div class="muted">No attempts reported yet.</div>'}
+        </div>
+      `;
+    }
+
+    function renderOverview(data) {
+      overviewCache = data;
+      usersCount.textContent = String(data?.totals?.users || 0);
+      attemptsCount.textContent = String(data?.totals?.attempts || 0);
+      deactivatedCount.textContent = String(data?.totals?.deactivated || 0);
+
+      const users = data?.users || [];
+      if (!users.length) {
+        usersBody.innerHTML = '<tr><td colspan="6" class="muted">No learner activity yet.</td></tr>';
+        renderDetail("");
+        return;
+      }
+
+      usersBody.innerHTML = users.map((user) => `
+        <tr>
+          <td><button class="secondary" data-detail="${user.key}">${user.displayName || user.username || "Unknown User"}</button></td>
+          <td>${user.username || "-"}</td>
+          <td>${user.hwid || "-"}</td>
+          <td>Best: ${user.stats?.bestScore || 0}/400<br><span class="muted">Latest: ${user.stats?.latestScore || 0}/400</span></td>
+          <td><span class="pill ${user.deactivated ? "off" : ""}">${user.deactivated ? "Deactivated" : "Active"}</span></td>
+          <td class="action-row">
+            ${user.deactivated
+              ? `<button class="success" data-action="activate" data-key="${user.key}">Reactivate</button>`
+              : `<button class="danger" data-action="deactivate" data-key="${user.key}">Deactivate</button>`}
+          </td>
+        </tr>
+      `).join("");
+
+      usersBody.querySelectorAll("[data-detail]").forEach((button) => {
+        button.addEventListener("click", () => renderDetail(button.dataset.detail));
+      });
+
+      usersBody.querySelectorAll("[data-action]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const user = users.find((entry) => entry.key === button.dataset.key);
+          if (!user) return;
+          const deactivate = button.dataset.action === "deactivate";
+          const reason = deactivate ? (prompt("Reason for deactivation:", user.deactivationReason || "Misuse detected") || "Misuse detected") : "";
+          try {
+            await api(deactivate ? "/api/monitor/deactivate" : "/api/monitor/activate", {
+              username: user.username,
+              hwid: user.hwid,
+              reason
+            });
+            await refreshOverview();
+            renderDetail(user.key);
+          } catch (error) {
+            alert(error.message || "Action failed.");
+          }
+        });
+      });
+
+      renderDetail(users[0].key);
+    }
+
+    async function refreshOverview() {
+      try {
+        const data = await api("/api/monitor/overview");
+        renderOverview(data);
+      } catch (error) {
+        usersBody.innerHTML = `<tr><td colspan="6" class="muted">${error.message || "Could not load monitor."}</td></tr>`;
+      }
+    }
+
+    secretInput.value = getSecret();
+    unlockBtn.addEventListener("click", () => {
+      localStorage.setItem("beason_monitor_admin_secret", secretInput.value.trim());
+      refreshOverview();
+    });
+    refreshBtn.addEventListener("click", refreshOverview);
+  </script>
+</body>
+</html>
