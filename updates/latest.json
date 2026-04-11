@@ -1,0 +1,64 @@
+{
+  "version": "2.5.0",
+  "channel": "stable",
+  "required": false,
+  "title": "New BEASON update available",
+  "notes": "BEASON 2.5 stable release with monitoring support and background updater flow.",
+  "fileName": "BEASON-2.5.0-Setup.exe",
+  "sha256": "e6bf7640c9f88a22725e04ed6413db19ee33c6903aa63532ec93aeb6d5ffb06d",
+  "publishedAt": "2026-04-11T18:20:00+01:00",
+  "chunks": [
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part000",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part001",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part002",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part003",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part004",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part005",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part006",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part007",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part008",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part009",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part010",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part011",
+      "size": 47185920
+    },
+    {
+      "url": "https://iexyjlordxbowitkasqp.supabase.co/storage/v1/object/public/beason-updates/releases/2.5.0/beason-2.5.0-installer.part012",
+      "size": 15734626
+    }
+  ]
+}
