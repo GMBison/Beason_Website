@@ -631,7 +631,7 @@ async function generateKey(actorUser, payload = {}) {
 
   const rows = await supabaseRequest("POST", "", {
     username: makeLicenseRowUsername(keyId),
-    hwid: targetHwid,
+    hwid: `license-log-${keyId}`,
     display_name: targetHwid,
     first_name: actorUser.username,
     last_name: expiry.durationLabel,
