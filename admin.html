@@ -9,19 +9,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #081420;
-      --panel: rgba(12, 29, 45, 0.9);
-      --panel-soft: rgba(17, 40, 60, 0.82);
+      --bg: #06111a;
+      --panel: rgba(10, 27, 41, 0.94);
+      --panel-soft: rgba(15, 36, 55, 0.9);
+      --line: rgba(145, 201, 244, 0.15);
       --text: #edf6ff;
-      --muted: #99b6ce;
-      --line: rgba(155, 204, 241, 0.16);
+      --muted: #93afc5;
       --accent: #6fd2ff;
       --accent-2: #4f8dff;
-      --ok: #6be6a6;
-      --warn: #ffcf5b;
-      --danger: #ff7b6f;
+      --ok: #62e4a0;
+      --warn: #f4c35d;
+      --danger: #ff8074;
       --radius: 8px;
-      --shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
       font-family: "Inter", system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
@@ -30,137 +30,127 @@
       min-height: 100vh;
       color: var(--text);
       background:
-        radial-gradient(circle at 0 0, rgba(111, 210, 255, 0.18), transparent 25%),
-        radial-gradient(circle at 100% 0, rgba(79, 141, 255, 0.16), transparent 22%),
-        linear-gradient(180deg, #05111b 0%, #0b1a29 100%);
+        linear-gradient(180deg, rgba(111, 210, 255, 0.08), transparent 26%),
+        linear-gradient(180deg, #06111a 0%, #091927 100%);
     }
-    button, input, select { font: inherit; }
+    button, input { font: inherit; }
+    button {
+      min-height: 46px;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      font-weight: 700;
+    }
+    button.primary {
+      color: #06111a;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    }
+    button.warn {
+      background: rgba(244, 195, 93, 0.14);
+      border-color: rgba(244, 195, 93, 0.32);
+    }
+    button.danger {
+      background: rgba(255, 128, 116, 0.14);
+      border-color: rgba(255, 128, 116, 0.32);
+    }
     .page {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1220px, calc(100% - 28px));
       margin: 0 auto;
       padding: 28px 0 40px;
     }
-    .hero, .panel, .stat, .key-card {
-      border: 1px solid var(--line);
+    .screen,
+    .panel,
+    .modal-card,
+    .table-wrap,
+    .reseller-card {
       background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
-    .hero {
+    .hidden { display: none !important; }
+    .login-shell {
+      min-height: calc(100vh - 68px);
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 18px;
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 18px;
+      place-items: center;
+    }
+    .screen {
+      width: min(460px, 100%);
+      padding: 26px;
     }
     .eyebrow {
-      margin: 0 0 12px;
+      margin: 0 0 8px;
       color: var(--accent);
       font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.12em;
       text-transform: uppercase;
     }
     h1, h2, h3, p { margin-top: 0; }
-    h1 {
-      font-size: clamp(2.3rem, 5vw, 4.3rem);
-      line-height: 0.96;
-      margin-bottom: 14px;
-      max-width: 12ch;
-    }
-    p {
-      color: var(--muted);
-      line-height: 1.7;
-      margin-bottom: 0;
-    }
-    .login-card {
-      background: var(--panel-soft);
-      border-radius: var(--radius);
-      padding: 18px;
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-    .field-grid,
-    .form-grid,
-    .stats,
-    .layout,
-    .reseller-grid,
-    .keys-grid {
-      display: grid;
-      gap: 14px;
-    }
-    .field-grid { grid-template-columns: 1fr 1fr; }
-    label {
+    h1 { margin-bottom: 22px; font-size: 2rem; }
+    h2 { margin-bottom: 0; font-size: 1.35rem; }
+    h3 { margin-bottom: 0; font-size: 1rem; }
+    .field,
+    .field-stack {
       display: grid;
       gap: 8px;
       color: var(--muted);
       font-size: 0.95rem;
     }
-    input, select {
+    .field-stack { gap: 14px; }
+    input {
       width: 100%;
       min-height: 48px;
+      padding: 0 14px;
       border-radius: var(--radius);
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--text);
-      padding: 0 14px;
     }
-    .actions {
+    .message,
+    .hint,
+    .meta,
+    .small {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .message { min-height: 22px; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .actions,
+    .duration-grid,
+    .toolbar-actions,
+    .inline-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
     }
-    button {
-      min-height: 46px;
-      border-radius: var(--radius);
-      border: 1px solid transparent;
-      padding: 0 16px;
-      cursor: pointer;
-      font-weight: 700;
-      color: var(--text);
-      background: rgba(255,255,255,0.08);
-    }
-    button.primary {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-      color: #07131f;
-    }
-    button.warn {
-      background: rgba(255, 207, 91, 0.14);
-      border-color: rgba(255, 207, 91, 0.28);
-    }
-    button.danger {
-      background: rgba(255, 123, 111, 0.12);
-      border-color: rgba(255, 123, 111, 0.28);
-    }
-    .stats { grid-template-columns: repeat(4, 1fr); }
-    .stat, .panel, .key-card {
-      border-radius: var(--radius);
-      padding: 18px;
-    }
-    .stat strong {
-      display: block;
-      margin-top: 8px;
-      font-size: clamp(1.7rem, 3vw, 2.7rem);
-    }
     .layout {
-      grid-template-columns: 1.15fr 0.85fr;
-      align-items: start;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
     }
+    .panel { padding: 20px; }
     .panel-head {
       display: flex;
       justify-content: space-between;
+      gap: 14px;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
-    .panel-head h2, .panel h3 { margin-bottom: 0; }
     .pill {
       display: inline-flex;
       align-items: center;
       min-height: 32px;
-      padding: 0 10px;
+      padding: 0 11px;
       border-radius: 999px;
       border: 1px solid var(--line);
       color: var(--muted);
@@ -168,142 +158,284 @@
       font-weight: 700;
       text-transform: uppercase;
     }
-    .pill.active { color: var(--ok); border-color: rgba(107, 230, 166, 0.28); }
-    .pill.paused { color: var(--warn); border-color: rgba(255, 207, 91, 0.28); }
-    .pill.restricted { color: var(--danger); border-color: rgba(255, 123, 111, 0.28); }
-    .reseller-grid, .keys-grid { max-height: 760px; overflow: auto; }
-    .reseller-card, .key-card { background: rgba(255,255,255,0.03); }
-    .reseller-card {
-      border: 1px solid var(--line);
+    .pill.active { color: var(--ok); border-color: rgba(98, 228, 160, 0.28); }
+    .pill.paused { color: var(--warn); border-color: rgba(244, 195, 93, 0.28); }
+    .pill.restricted { color: var(--danger); border-color: rgba(255, 128, 116, 0.28); }
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .duration-grid button {
+      min-width: 104px;
+      justify-content: center;
+    }
+    .duration-grid button.selected {
+      color: #06111a;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    }
+    .generator-status {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
       border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .owner-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 9, 14, 0.76);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      z-index: 20;
+    }
+    .modal-card {
+      width: min(1080px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      padding: 20px;
+    }
+    .table-wrap {
+      overflow: auto;
+      background: rgba(255, 255, 255, 0.02);
+      box-shadow: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.95rem;
+    }
+    th {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .reseller-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .reseller-card {
       padding: 16px;
       display: grid;
       gap: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      box-shadow: none;
     }
-    .reseller-card header, .key-card header {
+    .reseller-card header {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: start;
     }
-    .meta {
-      color: var(--muted);
-      font-size: 0.93rem;
-      line-height: 1.7;
+    .card-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr 1fr;
     }
-    .key-card strong {
-      display: block;
-      font-size: 1.05rem;
-      word-break: break-word;
-      margin-bottom: 10px;
-    }
-    .hint, .message {
-      color: var(--muted);
-      font-size: 0.94rem;
-    }
-    .message { min-height: 22px; }
-    .hidden { display: none !important; }
-    @media (max-width: 1040px) {
-      .hero, .layout, .stats, .field-grid { grid-template-columns: 1fr; }
+    @media (max-width: 860px) {
+      .topbar,
+      .panel-head,
+      .owner-toolbar,
+      .reseller-card header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+      .duration-grid button {
+        min-width: 0;
+        flex: 1 1 140px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">BEASON Admin</p>
-        <h1>Manage resellers and generate activation keys.</h1>
-        <p>
-          Owners can see every generated key, create reseller accounts, and pause or restrict resellers.
-          Resellers can generate unlimited keys for specific HWIDs while every key stays logged.
-        </p>
-      </div>
-      <div class="login-card">
-        <p class="eyebrow">Sign in</p>
-        <div class="field-grid">
-          <label>Username<input id="usernameInput" type="text" autocomplete="username" placeholder="bison or hwid" /></label>
-          <label>Password<input id="passwordInput" type="password" autocomplete="current-password" placeholder="Enter password" /></label>
+    <section id="loginScreen" class="login-shell">
+      <div class="screen">
+        <p class="eyebrow">Staff Access</p>
+        <h1>Sign in</h1>
+        <div class="field-stack">
+          <label class="field">Username<input id="usernameInput" type="text" autocomplete="username" /></label>
+          <label class="field">Password<input id="passwordInput" type="password" autocomplete="current-password" /></label>
+          <div class="actions">
+            <button id="loginBtn" class="primary" type="button">Login</button>
+          </div>
+          <div id="loginMessage" class="message"></div>
         </div>
-        <div class="actions">
-          <button id="loginBtn" class="primary" type="button">Sign in</button>
-          <button id="logoutBtn" type="button">Sign out</button>
-          <button id="refreshBtn" type="button">Refresh</button>
-        </div>
-        <div class="hint">Default owner: bison / Victoris13? | reseller: hwid / 123b123</div>
-        <div id="message" class="message"></div>
       </div>
     </section>
 
     <section id="dashboard" class="hidden">
-      <div class="stats">
-        <article class="stat"><p class="eyebrow">Signed in as</p><strong id="currentUserName">-</strong><div id="currentUserMeta" class="meta"></div></article>
-        <article class="stat"><p class="eyebrow">All keys</p><strong id="totalKeys">0</strong></article>
-        <article class="stat"><p class="eyebrow">Visible keys</p><strong id="visibleKeys">0</strong></article>
-        <article class="stat"><p class="eyebrow">Resellers limited</p><strong id="pausedResellers">0</strong></article>
+      <div class="topbar">
+        <div>
+          <p class="eyebrow">Staff Session</p>
+          <h2 id="welcomeName">-</h2>
+          <div id="welcomeMeta" class="meta"></div>
+        </div>
+        <div class="toolbar-actions">
+          <button id="viewLogsBtn" type="button" class="hidden">View logs</button>
+          <button id="manageResellersBtn" type="button" class="hidden">Manage resellers</button>
+          <button id="refreshBtn" type="button">Refresh</button>
+          <button id="logoutBtn" type="button">Logout</button>
+        </div>
       </div>
 
-      <div class="layout" style="margin-top: 18px;">
+      <div class="layout">
         <section class="panel">
-          <div class="panel-head"><h2>Key generator</h2><span id="rolePill" class="pill">-</span></div>
-          <div class="form-grid">
-            <label>Target HWID<input id="targetHwidInput" type="text" placeholder="PC-1234-ABCD" /></label>
-            <label>Note<input id="noteInput" type="text" placeholder="Optional note for this key" /></label>
-            <div class="actions"><button id="generateBtn" class="primary" type="button">Generate key</button></div>
-            <div id="keyMessage" class="message"></div>
+          <div class="panel-head">
+            <h2>Key generator</h2>
+            <span id="rolePill" class="pill">-</span>
           </div>
-        </section>
-
-        <section id="ownerPanel" class="panel hidden">
-          <div class="panel-head"><h2>Create reseller</h2><span class="pill active">Owner only</span></div>
           <div class="form-grid">
-            <label>Display name<input id="resellerNameInput" type="text" placeholder="Agent Prime" /></label>
-            <label>Username<input id="resellerUsernameInput" type="text" placeholder="agentprime" /></label>
-            <label>Password<input id="resellerPasswordInput" type="text" placeholder="Create a password" /></label>
-            <div class="actions"><button id="createResellerBtn" class="primary" type="button">Create reseller</button></div>
-            <div id="resellerMessage" class="message"></div>
+            <label class="field">User HWID<input id="targetHwidInput" type="text" placeholder="PC-1234-ABCD" /></label>
+
+            <div class="field">
+              <span>Duration</span>
+              <div class="duration-grid">
+                <button type="button" data-duration="1day">1 day</button>
+                <button type="button" data-duration="1month">1 month</button>
+                <button type="button" data-duration="3months">3 months</button>
+                <button type="button" data-duration="6months">6 months</button>
+                <button type="button" data-duration="1year">1 year</button>
+              </div>
+            </div>
+
+            <label class="field">Custom expiry<input id="customExpiryInput" type="datetime-local" /></label>
+            <div id="expiryHint" class="hint">Pick a duration or set a custom expiry.</div>
+
+            <label class="field">Internal note<input id="noteInput" type="text" placeholder="Optional note" /></label>
+
+            <div class="actions">
+              <button id="generateBtn" class="primary" type="button">Generate key</button>
+              <button id="copyLatestBtn" type="button" class="hidden">Copy key</button>
+            </div>
+
+            <div class="generator-status">
+              <div id="keyMessage" class="message"></div>
+              <div id="keyMeta" class="meta"></div>
+            </div>
           </div>
-        </section>
-      </div>
-
-      <div class="layout" style="margin-top: 18px;">
-        <section class="panel">
-          <div class="panel-head"><h2>Generated keys</h2><span class="pill">Logged</span></div>
-          <div id="keysGrid" class="keys-grid"><div class="hint">No keys yet.</div></div>
-        </section>
-
-        <section id="resellerPanel" class="panel hidden">
-          <div class="panel-head"><h2>Resellers</h2><span class="pill">Owner view</span></div>
-          <div id="resellerGrid" class="reseller-grid"><div class="hint">No reseller accounts yet.</div></div>
         </section>
       </div>
     </section>
   </div>
 
+  <div id="logsModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Owner View</p>
+          <h2>Logs</h2>
+        </div>
+        <button type="button" data-close="logsModal">Close</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>HWID</th>
+              <th>Key</th>
+              <th>Duration</th>
+              <th>Remaining</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody">
+            <tr><td colspan="5" class="small">No logs yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="resellersModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Owner View</p>
+          <h2>Manage resellers</h2>
+        </div>
+        <button type="button" data-close="resellersModal">Close</button>
+      </div>
+      <div class="card-grid">
+        <section class="panel" style="padding: 18px;">
+          <div class="panel-head">
+            <h3>Create reseller</h3>
+          </div>
+          <div class="form-grid">
+            <label class="field">Display name<input id="resellerNameInput" type="text" placeholder="Agent Prime" /></label>
+            <label class="field">Username<input id="resellerUsernameInput" type="text" placeholder="agentprime" /></label>
+            <label class="field">Password<input id="resellerPasswordInput" type="text" placeholder="Create a password" /></label>
+            <div class="actions">
+              <button id="createResellerBtn" class="primary" type="button">Create reseller</button>
+            </div>
+            <div id="resellerMessage" class="message"></div>
+          </div>
+        </section>
+
+        <section class="panel" style="padding: 18px;">
+          <div class="panel-head">
+            <h3>Reseller accounts</h3>
+          </div>
+          <div id="resellerList" class="reseller-list">
+            <div class="small">No reseller accounts yet.</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <script>
     const tokenKey = "beason_admin_token";
-    const message = document.getElementById("message");
-    const keyMessage = document.getElementById("keyMessage");
-    const resellerMessage = document.getElementById("resellerMessage");
+    const loginScreen = document.getElementById("loginScreen");
     const dashboard = document.getElementById("dashboard");
-    const ownerPanel = document.getElementById("ownerPanel");
-    const resellerPanel = document.getElementById("resellerPanel");
+    const loginMessage = document.getElementById("loginMessage");
+    const keyMessage = document.getElementById("keyMessage");
+    const keyMeta = document.getElementById("keyMeta");
+    const resellerMessage = document.getElementById("resellerMessage");
+    const welcomeName = document.getElementById("welcomeName");
+    const welcomeMeta = document.getElementById("welcomeMeta");
     const rolePill = document.getElementById("rolePill");
-    const currentUserName = document.getElementById("currentUserName");
-    const currentUserMeta = document.getElementById("currentUserMeta");
-    const totalKeys = document.getElementById("totalKeys");
-    const visibleKeys = document.getElementById("visibleKeys");
-    const pausedResellers = document.getElementById("pausedResellers");
-    const keysGrid = document.getElementById("keysGrid");
-    const resellerGrid = document.getElementById("resellerGrid");
+    const viewLogsBtn = document.getElementById("viewLogsBtn");
+    const manageResellersBtn = document.getElementById("manageResellersBtn");
+    const copyLatestBtn = document.getElementById("copyLatestBtn");
+    const logsModal = document.getElementById("logsModal");
+    const resellersModal = document.getElementById("resellersModal");
+    const logsTableBody = document.getElementById("logsTableBody");
+    const resellerList = document.getElementById("resellerList");
+    const expiryHint = document.getElementById("expiryHint");
 
     const usernameInput = document.getElementById("usernameInput");
     const passwordInput = document.getElementById("passwordInput");
     const targetHwidInput = document.getElementById("targetHwidInput");
+    const customExpiryInput = document.getElementById("customExpiryInput");
     const noteInput = document.getElementById("noteInput");
     const resellerNameInput = document.getElementById("resellerNameInput");
     const resellerUsernameInput = document.getElementById("resellerUsernameInput");
     const resellerPasswordInput = document.getElementById("resellerPasswordInput");
+    const durationButtons = Array.from(document.querySelectorAll("[data-duration]"));
+
+    let selectedDuration = "";
+    let lastGeneratedKey = "";
+    let latestOverview = null;
 
     function setMessage(target, text, tone) {
       target.textContent = text || "";
@@ -318,11 +450,25 @@
       localStorage.setItem(tokenKey, token);
     }
 
+    function closeModal(modal) {
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function openModal(modal) {
+      modal.classList.remove("hidden");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
     function clearSession() {
       localStorage.removeItem(tokenKey);
+      loginScreen.classList.remove("hidden");
       dashboard.classList.add("hidden");
-      ownerPanel.classList.add("hidden");
-      resellerPanel.classList.add("hidden");
+      closeModal(logsModal);
+      closeModal(resellersModal);
+      lastGeneratedKey = "";
+      latestOverview = null;
+      copyLatestBtn.classList.add("hidden");
     }
 
     async function api(path, body = {}) {
@@ -347,33 +493,86 @@
       return status === "paused" ? "paused" : status === "restricted" ? "restricted" : "active";
     }
 
-    function renderKeys(keys) {
+    function updateDurationButtons() {
+      durationButtons.forEach((button) => {
+        button.classList.toggle("selected", button.dataset.duration === selectedDuration);
+      });
+    }
+
+    function getRelativeLabel(dateValue) {
+      if (!dateValue) return "No expiry selected.";
+      const remaining = new Date(dateValue).getTime() - Date.now();
+      if (remaining <= 0) return "Expiry has passed.";
+      const units = [
+        { label: "year", size: 365 * 24 * 60 * 60 * 1000 },
+        { label: "month", size: 30 * 24 * 60 * 60 * 1000 },
+        { label: "day", size: 24 * 60 * 60 * 1000 },
+        { label: "hour", size: 60 * 60 * 1000 },
+        { label: "minute", size: 60 * 1000 },
+      ];
+      for (const unit of units) {
+        if (remaining >= unit.size) {
+          const amount = Math.max(1, Math.floor(remaining / unit.size));
+          return `${amount} ${unit.label}${amount === 1 ? "" : "s"} left`;
+        }
+      }
+      return "Less than a minute left";
+    }
+
+    function getSelectedExpiryText() {
+      if (customExpiryInput.value) {
+        return `Custom expiry set for ${formatDate(customExpiryInput.value)}. ${getRelativeLabel(customExpiryInput.value)}`;
+      }
+      const button = durationButtons.find((item) => item.dataset.duration === selectedDuration);
+      return button ? `${button.textContent} selected.` : "Pick a duration or set a custom expiry.";
+    }
+
+    function refreshExpiryHint() {
+      expiryHint.textContent = getSelectedExpiryText();
+    }
+
+    async function copyToClipboard(text, successTarget, successMessage) {
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      if (successTarget) setMessage(successTarget, successMessage, "success");
+    }
+
+    function renderLogs(keys) {
       if (!keys.length) {
-        keysGrid.innerHTML = '<div class="hint">No keys yet.</div>';
+        logsTableBody.innerHTML = '<tr><td colspan="5" class="small">No logs yet.</td></tr>';
         return;
       }
-      keysGrid.innerHTML = keys.map((item) => `
-        <article class="key-card">
-          <header>
-            <div>
-              <strong>${item.licenseKey}</strong>
-              <div class="meta">HWID: ${item.targetHwid || "-"}</div>
-            </div>
-            <span class="pill active">${item.generatedBy}</span>
-          </header>
-          <div class="meta">Created: ${formatDate(item.generatedAt)}</div>
-          <div class="meta">Note: ${item.note || "-"}</div>
-        </article>
+
+      logsTableBody.innerHTML = keys.map((item) => `
+        <tr>
+          <td>${item.generatedByDisplayName || item.generatedBy || "-"}</td>
+          <td>${item.targetHwid || "-"}</td>
+          <td><button type="button" data-copy-key="${item.keyId}">Copy key</button></td>
+          <td>${item.durationLabel || "-"}</td>
+          <td>${item.remainingLabel || "-"}</td>
+        </tr>
       `).join("");
+
+      logsTableBody.querySelectorAll("[data-copy-key]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const key = (latestOverview?.keys || []).find((item) => item.keyId === button.dataset.copyKey);
+          if (!key?.productKey) return;
+          try {
+            await copyToClipboard(key.productKey, keyMessage, "Key copied.");
+          } catch (error) {
+            setMessage(keyMessage, "Clipboard copy failed.", "error");
+          }
+        });
+      });
     }
 
     function renderResellers(resellers) {
       if (!resellers.length) {
-        resellerGrid.innerHTML = '<div class="hint">No reseller accounts yet.</div>';
+        resellerList.innerHTML = '<div class="small">No reseller accounts yet.</div>';
         return;
       }
 
-      resellerGrid.innerHTML = resellers.map((item) => `
+      resellerList.innerHTML = resellers.map((item) => `
         <article class="reseller-card">
           <header>
             <div>
@@ -384,7 +583,7 @@
           </header>
           <div class="meta">Keys generated: ${item.totalKeys}</div>
           <div class="meta">Last key: ${formatDate(item.recentKeyAt)}</div>
-          <div class="actions">
+          <div class="inline-actions">
             <button type="button" data-user="${item.username}" data-status="active">Set active</button>
             <button type="button" class="warn" data-user="${item.username}" data-status="paused">Pause</button>
             <button type="button" class="danger" data-user="${item.username}" data-status="restricted">Restrict</button>
@@ -392,11 +591,14 @@
         </article>
       `).join("");
 
-      resellerGrid.querySelectorAll("button[data-user]").forEach((button) => {
+      resellerList.querySelectorAll("[data-user]").forEach((button) => {
         button.addEventListener("click", async () => {
           try {
-            await api("/api/admin/update-reseller", { username: button.dataset.user, status: button.dataset.status });
-            setMessage(resellerMessage, `Updated ${button.dataset.user} to ${button.dataset.status}.`, "success");
+            await api("/api/admin/update-reseller", {
+              username: button.dataset.user,
+              status: button.dataset.status,
+            });
+            setMessage(resellerMessage, `${button.dataset.user} updated to ${button.dataset.status}.`, "success");
             await loadOverview();
           } catch (error) {
             setMessage(resellerMessage, error.message, "error");
@@ -406,18 +608,25 @@
     }
 
     function renderOverview(data) {
+      latestOverview = data;
+      loginScreen.classList.add("hidden");
       dashboard.classList.remove("hidden");
-      currentUserName.textContent = data.currentUser.displayName;
-      currentUserMeta.textContent = `@${data.currentUser.username} | ${data.currentUser.status}`;
+      welcomeName.textContent = data.currentUser.displayName;
+      welcomeMeta.textContent = `@${data.currentUser.username} | ${data.currentUser.status}`;
       rolePill.textContent = data.currentUser.role;
       rolePill.className = `pill ${statusClass(data.currentUser.status)}`;
-      totalKeys.textContent = String(data.stats.totalKeys);
-      visibleKeys.textContent = String(data.stats.visibleKeys);
-      pausedResellers.textContent = String(data.stats.pausedResellers);
-      ownerPanel.classList.toggle("hidden", data.currentUser.role !== "owner");
-      resellerPanel.classList.toggle("hidden", data.currentUser.role !== "owner");
-      renderKeys(data.keys || []);
-      renderResellers(data.currentUser.role === "owner" ? (data.resellers || []) : []);
+
+      const owner = data.currentUser.role === "owner";
+      viewLogsBtn.classList.toggle("hidden", !owner);
+      manageResellersBtn.classList.toggle("hidden", !owner);
+
+      if (owner) {
+        renderLogs(data.keys || []);
+        renderResellers(data.resellers || []);
+      } else {
+        closeModal(logsModal);
+        closeModal(resellersModal);
+      }
     }
 
     async function loadOverview() {
@@ -425,15 +634,36 @@
       renderOverview(data);
     }
 
+    durationButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedDuration = button.dataset.duration;
+        customExpiryInput.value = "";
+        updateDurationButtons();
+        refreshExpiryHint();
+      });
+    });
+
+    customExpiryInput.addEventListener("input", () => {
+      if (customExpiryInput.value) {
+        selectedDuration = "";
+        updateDurationButtons();
+      }
+      refreshExpiryHint();
+    });
+
     document.getElementById("loginBtn").addEventListener("click", async () => {
       try {
-        const data = await api("/api/admin/login", { username: usernameInput.value, password: passwordInput.value });
+        const data = await api("/api/admin/login", {
+          username: usernameInput.value,
+          password: passwordInput.value,
+        });
         saveSession(data.token);
-        setMessage(message, `Signed in as ${data.user.username}.`, "success");
+        passwordInput.value = "";
+        setMessage(loginMessage, "Signed in.", "success");
         await loadOverview();
       } catch (error) {
         clearSession();
-        setMessage(message, error.message, "error");
+        setMessage(loginMessage, error.message, "error");
       }
     });
 
@@ -442,27 +672,49 @@
         if (getToken()) await api("/api/admin/logout");
       } catch (error) {}
       clearSession();
-      setMessage(message, "Signed out.", "success");
+      setMessage(loginMessage, "Signed out.", "success");
     });
 
     document.getElementById("refreshBtn").addEventListener("click", async () => {
       try {
         await loadOverview();
-        setMessage(message, "Dashboard refreshed.", "success");
+        setMessage(keyMessage, "Panel refreshed.", "success");
       } catch (error) {
-        setMessage(message, error.message, "error");
+        setMessage(keyMessage, error.message, "error");
       }
     });
 
     document.getElementById("generateBtn").addEventListener("click", async () => {
       try {
-        const data = await api("/api/admin/generate-key", { targetHwid: targetHwidInput.value, note: noteInput.value });
+        const data = await api("/api/admin/generate-key", {
+          targetHwid: targetHwidInput.value,
+          duration: selectedDuration,
+          customExpiresAt: customExpiryInput.value,
+          note: noteInput.value,
+        });
+        lastGeneratedKey = data.key.productKey || "";
         targetHwidInput.value = "";
         noteInput.value = "";
-        setMessage(keyMessage, `Created ${data.key.licenseKey}`, "success");
-        await loadOverview();
+        customExpiryInput.value = "";
+        selectedDuration = "";
+        updateDurationButtons();
+        refreshExpiryHint();
+        copyLatestBtn.classList.toggle("hidden", !lastGeneratedKey);
+        await copyToClipboard(lastGeneratedKey, keyMessage, "Key generated and copied to clipboard.");
+        keyMeta.textContent = `${data.key.durationLabel} | expires ${formatDate(data.key.expiresAt)} | ${data.key.remainingLabel}`;
+        if (latestOverview?.currentUser?.role === "owner") {
+          await loadOverview();
+        }
       } catch (error) {
         setMessage(keyMessage, error.message, "error");
+      }
+    });
+
+    copyLatestBtn.addEventListener("click", async () => {
+      try {
+        await copyToClipboard(lastGeneratedKey, keyMessage, "Key copied to clipboard.");
+      } catch (error) {
+        setMessage(keyMessage, "Clipboard copy failed.", "error");
       }
     });
 
@@ -482,6 +734,22 @@
         setMessage(resellerMessage, error.message, "error");
       }
     });
+
+    viewLogsBtn.addEventListener("click", () => openModal(logsModal));
+    manageResellersBtn.addEventListener("click", () => openModal(resellersModal));
+
+    document.querySelectorAll("[data-close]").forEach((button) => {
+      button.addEventListener("click", () => closeModal(document.getElementById(button.dataset.close)));
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal(logsModal);
+        closeModal(resellersModal);
+      }
+    });
+
+    refreshExpiryHint();
 
     (async () => {
       if (!getToken()) return;

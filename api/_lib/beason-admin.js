@@ -2,10 +2,13 @@ const crypto = require("crypto");
 
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+const ISSUER_PRIVATE_KEY_PEM = String(process.env.BEASON_ISSUER_PRIVATE_KEY_PEM || "").replace(/\\n/g, "\n").trim();
 const SESSION_DAYS = Math.max(Number(process.env.BEASON_ADMIN_SESSION_DAYS) || 14, 1);
 const TABLE = "beason_monitor_learners";
 const ADMIN_PREFIX = "admin::";
 const LICENSE_PREFIX = "license::";
+const APP_PRODUCT_ID = "BEASON_CBT_PRO";
+const APP_PRODUCT_CODE = "BCP";
 
 const DEFAULT_USERS = [
   {
@@ -23,6 +26,14 @@ const DEFAULT_USERS = [
     displayName: "HWID",
   },
 ];
+
+const DURATION_PRESETS = {
+  "1day": { label: "1 day", days: 1 },
+  "1month": { label: "1 month", months: 1 },
+  "3months": { label: "3 months", months: 3 },
+  "6months": { label: "6 months", months: 6 },
+  "1year": { label: "1 year", years: 1 },
+};
 
 function sendJson(res, status, payload) {
   res.statusCode = status;
@@ -91,6 +102,10 @@ function normalizeStatus(value) {
   return ["active", "paused", "restricted"].includes(normalized) ? normalized : "active";
 }
 
+function normalizeHwid(value) {
+  return String(value || "").trim().replace(/\s+/g, "").toUpperCase();
+}
+
 function sha256(value) {
   return crypto.createHash("sha256").update(String(value || "")).digest("hex");
 }
@@ -129,24 +144,137 @@ function makeAdminRowUsername(username) {
   return `${ADMIN_PREFIX}${normalizeUsername(username)}`;
 }
 
-function makeLicenseRowUsername(key) {
-  return `${LICENSE_PREFIX}${String(key || "").trim().toUpperCase()}`;
+function makeLicenseRowUsername(keyId) {
+  return `${LICENSE_PREFIX}${String(keyId || "").trim().toLowerCase()}`;
 }
 
 function parseAdminUsername(rowUsername) {
   return String(rowUsername || "").startsWith(ADMIN_PREFIX) ? String(rowUsername).slice(ADMIN_PREFIX.length) : "";
 }
 
-function parseLicenseKey(rowUsername) {
-  return String(rowUsername || "").startsWith(LICENSE_PREFIX) ? String(rowUsername).slice(LICENSE_PREFIX.length) : "";
+function getFirstAttempt(row) {
+  return Array.isArray(row?.recent_attempts) ? row.recent_attempts[0] || null : null;
 }
 
-function createLicenseKey() {
-  const chunks = [];
-  for (let index = 0; index < 5; index += 1) {
-    chunks.push(crypto.randomBytes(3).toString("hex").toUpperCase());
+function maskKey(productKey) {
+  if (!productKey) return "";
+  const [payloadPart = "", signaturePart = ""] = String(productKey).split(".");
+  return `${payloadPart.slice(0, 10)}...${signaturePart.slice(-8)}`;
+}
+
+function createRelativeLabel(msRemaining) {
+  if (msRemaining <= 0) return "expired";
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const month = 30 * day;
+  const year = 365 * day;
+
+  const units = [
+    { label: "year", size: year },
+    { label: "month", size: month },
+    { label: "day", size: day },
+    { label: "hour", size: hour },
+    { label: "minute", size: minute },
+  ];
+
+  for (const unit of units) {
+    if (msRemaining >= unit.size) {
+      const amount = Math.max(1, Math.floor(msRemaining / unit.size));
+      return `${amount} ${unit.label}${amount === 1 ? "" : "s"} left`;
+    }
   }
-  return `BEASON-${chunks.join("-")}`;
+
+  return "less than a minute left";
+}
+
+function addDuration(baseDate, preset) {
+  const next = new Date(baseDate.getTime());
+  if (preset.days) next.setUTCDate(next.getUTCDate() + preset.days);
+  if (preset.months) next.setUTCMonth(next.getUTCMonth() + preset.months);
+  if (preset.years) next.setUTCFullYear(next.getUTCFullYear() + preset.years);
+  return next;
+}
+
+function parseCustomExpiry(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const normalized = raw.includes("T") ? raw : raw.replace(" ", "T");
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    const error = new Error("Custom expiry is invalid.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return parsed;
+}
+
+function resolveExpiry(payload = {}) {
+  const preset = DURATION_PRESETS[String(payload.duration || "").trim()];
+  const customExpiry = parseCustomExpiry(payload.customExpiresAt);
+  const now = new Date();
+
+  let expiresAt = null;
+  let durationLabel = "";
+
+  if (customExpiry) {
+    expiresAt = customExpiry;
+    durationLabel = "Custom expiry";
+  } else if (preset) {
+    expiresAt = addDuration(now, preset);
+    durationLabel = preset.label;
+  } else {
+    const error = new Error("Choose a duration or custom expiry.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (expiresAt.getTime() <= Date.now()) {
+    const error = new Error("Expiry must be in the future.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    expiresAt,
+    expiresUnix: Math.floor(expiresAt.getTime() / 1000),
+    durationLabel,
+  };
+}
+
+function base64UrlJson(value) {
+  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+}
+
+function requireIssuerKey() {
+  if (!ISSUER_PRIVATE_KEY_PEM) {
+    const error = new Error("Issuer private key env is not configured on the server.");
+    error.statusCode = 500;
+    throw error;
+  }
+}
+
+function issueProductKey(targetHwid, expiresUnix, kind = "standard") {
+  requireIssuerKey();
+  const normalizedHwid = normalizeHwid(targetHwid);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const payload = {
+    v: 2,
+    p: APP_PRODUCT_ID,
+    pc: APP_PRODUCT_CODE,
+    h: crypto.createHash("sha256").update(normalizedHwid, "utf8").digest("base64url"),
+    n: nowUnix,
+    nb: nowUnix,
+    e: expiresUnix,
+    k: kind,
+    id: crypto.randomUUID().replace(/-/g, "").slice(0, 16),
+  };
+  const payloadBlob = Buffer.from(JSON.stringify(payload), "utf8");
+  const signature = crypto.sign(null, payloadBlob, ISSUER_PRIVATE_KEY_PEM).toString("base64url");
+  return {
+    payload,
+    productKey: `${payloadBlob.toString("base64url")}.${signature}`,
+  };
 }
 
 async function getRowByUsername(rowUsername) {
@@ -222,14 +350,23 @@ function mapAdminRow(row) {
 }
 
 function mapLicenseRow(row) {
+  const attempt = getFirstAttempt(row) || {};
+  const expiresAt = attempt.expiresAt || null;
+  const remainingLabel = createRelativeLabel((expiresAt ? new Date(expiresAt).getTime() : 0) - Date.now());
   return {
     id: row.id,
-    licenseKey: parseLicenseKey(row.username),
-    targetHwid: row.display_name || "",
-    generatedBy: row.first_name || "",
-    note: row.last_name || "",
-    status: row.status || "active",
-    generatedAt: row.created_at || null,
+    keyId: attempt.keyId || String(row.username || "").slice(LICENSE_PREFIX.length),
+    targetHwid: attempt.hwid || row.display_name || "",
+    generatedBy: attempt.generatedBy || row.first_name || "",
+    generatedByDisplayName: attempt.generatedByDisplayName || attempt.generatedBy || row.first_name || "",
+    durationLabel: attempt.durationLabel || row.last_name || "Custom expiry",
+    expiresAt,
+    remainingLabel,
+    generatedAt: attempt.issuedAt || row.created_at || null,
+    productKey: attempt.productKey || "",
+    maskedKey: maskKey(attempt.productKey || ""),
+    payload: attempt.payload || null,
+    note: attempt.note || null,
   };
 }
 
@@ -287,9 +424,7 @@ async function listLicenseKeys() {
 async function buildOverviewFor(user) {
   const users = await listAdminUsers();
   const keys = await listLicenseKeys();
-  const visibleKeys = normalizeRole(user.role) === "owner"
-    ? keys
-    : keys.filter((item) => normalizeUsername(item.generatedBy) === normalizeUsername(user.username));
+  const isOwner = normalizeRole(user.role) === "owner";
 
   return {
     ok: true,
@@ -305,28 +440,29 @@ async function buildOverviewFor(user) {
     },
     stats: {
       totalKeys: keys.length,
-      visibleKeys: visibleKeys.length,
       resellerCount: users.filter((item) => item.role === "reseller").length,
       pausedResellers: users.filter((item) => item.role === "reseller" && item.status !== "active").length,
     },
-    resellers: users
-      .filter((item) => item.role === "reseller")
-      .map((item) => {
-        const resellerKeys = keys.filter((key) => normalizeUsername(key.generatedBy) === normalizeUsername(item.username));
-        return {
-          id: item.id,
-          username: item.username,
-          displayName: item.displayName,
-          role: item.role,
-          status: item.status,
-          managedBy: item.managedBy,
-          lastLoginAt: item.lastLoginAt,
-          createdAt: item.createdAt,
-          totalKeys: resellerKeys.length,
-          recentKeyAt: resellerKeys[0]?.generatedAt || null,
-        };
-      }),
-    keys: visibleKeys,
+    resellers: isOwner
+      ? users
+          .filter((item) => item.role === "reseller")
+          .map((item) => {
+            const resellerKeys = keys.filter((key) => normalizeUsername(key.generatedBy) === normalizeUsername(item.username));
+            return {
+              id: item.id,
+              username: item.username,
+              displayName: item.displayName,
+              role: item.role,
+              status: item.status,
+              managedBy: item.managedBy,
+              lastLoginAt: item.lastLoginAt,
+              createdAt: item.createdAt,
+              totalKeys: resellerKeys.length,
+              recentKeyAt: resellerKeys[0]?.generatedAt || null,
+            };
+          })
+      : [],
+    keys: isOwner ? keys : [],
   };
 }
 
@@ -466,42 +602,65 @@ async function updateReseller(ownerUser, payload = {}) {
 
 async function generateKey(actorUser, payload = {}) {
   assertCanGenerate(actorUser);
-  const targetHwid = String(payload.targetHwid || "").trim();
-  const note = String(payload.note || "").trim();
+
+  const targetHwid = normalizeHwid(payload.targetHwid);
   if (!targetHwid) {
     const error = new Error("Target HWID is required.");
     error.statusCode = 400;
     throw error;
   }
 
-  let key = createLicenseKey();
-  while (await getRowByUsername(makeLicenseRowUsername(key))) {
-    key = createLicenseKey();
-  }
+  const note = String(payload.note || "").trim();
+  const expiry = resolveExpiry(payload);
+  const issued = issueProductKey(targetHwid, expiry.expiresUnix, "standard");
+  const issuedAt = new Date().toISOString();
+  const keyId = issued.payload.id;
+
+  const logEntry = {
+    keyId,
+    hwid: targetHwid,
+    generatedBy: actorUser.username,
+    generatedByDisplayName: actorUser.displayName,
+    issuedAt,
+    expiresAt: expiry.expiresAt.toISOString(),
+    durationLabel: expiry.durationLabel,
+    note: note || null,
+    productKey: issued.productKey,
+    payload: issued.payload,
+  };
 
   const rows = await supabaseRequest("POST", "", {
-    username: makeLicenseRowUsername(key),
-    hwid: null,
+    username: makeLicenseRowUsername(keyId),
+    hwid: targetHwid,
     display_name: targetHwid,
     first_name: actorUser.username,
-    last_name: note || null,
+    last_name: expiry.durationLabel,
     status: "active",
     deactivation_reason: null,
     attempt_count: 0,
     best_score: 0,
     latest_score: 0,
-    recent_attempts: [],
+    recent_attempts: [logEntry],
     license_validated: true,
     license_blocked: false,
     app_version: "license",
-    last_seen_at: new Date().toISOString(),
+    last_seen_at: issuedAt,
   });
 
   const row = Array.isArray(rows) ? rows[0] : rows;
   const item = mapLicenseRow(row);
   return {
     ok: true,
-    key: item,
+    key: {
+      keyId: item.keyId,
+      targetHwid: item.targetHwid,
+      durationLabel: item.durationLabel,
+      expiresAt: item.expiresAt,
+      remainingLabel: item.remainingLabel,
+      maskedKey: item.maskedKey,
+      productKey: item.productKey,
+      generatedAt: item.generatedAt,
+    },
   };
 }
 
