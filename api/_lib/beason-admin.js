@@ -262,18 +262,20 @@ function issueProductKey(targetHwid, expiresUnix, kind = "standard") {
     v: 2,
     p: APP_PRODUCT_ID,
     pc: APP_PRODUCT_CODE,
-    h: crypto.createHash("sha256").update(normalizedHwid, "utf8").digest("hex"),
+    h: crypto.createHash("sha256").update(normalizedHwid, "utf8").digest("base64url"),
     n: nowUnix,
     nb: nowUnix,
     e: expiresUnix,
     k: kind,
     id: crypto.randomUUID().replace(/-/g, "").slice(0, 16),
   };
-  const payloadBlob = Buffer.from(JSON.stringify(payload), "utf8");
-  const signature = crypto.sign(null, payloadBlob, ISSUER_PRIVATE_KEY_PEM).toString("base64url");
+  const payloadJson = Buffer.from(JSON.stringify(payload), "utf8");
+  const payloadB64 = payloadJson.toString("base64url");
+  const signedMessage = Buffer.from(`${payloadB64}.${normalizedHwid}`, "utf8");
+  const signature = crypto.sign(null, signedMessage, ISSUER_PRIVATE_KEY_PEM).toString("base64url");
   return {
     payload,
-    productKey: `${payloadBlob.toString("base64url")}.${signature}`,
+    productKey: `${payloadB64}.${signature}`,
   };
 }
 
