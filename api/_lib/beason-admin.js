@@ -3,9 +3,9 @@ const crypto = require("crypto");
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
 const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 const SESSION_DAYS = Math.max(Number(process.env.BEASON_ADMIN_SESSION_DAYS) || 14, 1);
-const ADMIN_USERS_TABLE = "beason_admin_users";
-const ADMIN_SESSIONS_TABLE = "beason_admin_sessions";
-const LICENSE_KEYS_TABLE = "beason_license_keys";
+const TABLE = "beason_monitor_learners";
+const ADMIN_PREFIX = "admin::";
+const LICENSE_PREFIX = "license::";
 
 const DEFAULT_USERS = [
   {
@@ -56,9 +56,9 @@ function requireSupabaseConfig() {
   }
 }
 
-async function supabaseRequest(table, method, query = "", body) {
+async function supabaseRequest(method, query = "", body) {
   requireSupabaseConfig();
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}${query}`, {
     method,
     headers: {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -95,8 +95,50 @@ function sha256(value) {
   return crypto.createHash("sha256").update(String(value || "")).digest("hex");
 }
 
-function randomToken(size = 32) {
-  return crypto.randomBytes(size).toString("hex");
+function signValue(value) {
+  return crypto
+    .createHmac("sha256", SUPABASE_SERVICE_ROLE_KEY || "beason-admin")
+    .update(String(value || ""))
+    .digest("hex");
+}
+
+function encodeToken(payload) {
+  const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  return `${encoded}.${signValue(encoded)}`;
+}
+
+function decodeToken(token) {
+  const [encoded, signature] = String(token || "").split(".");
+  if (!encoded || !signature || signValue(encoded) !== signature) {
+    const error = new Error("Session expired. Please sign in again.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+  if (!payload.exp || Number(payload.exp) < Date.now()) {
+    const error = new Error("Session expired. Please sign in again.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return payload;
+}
+
+function makeAdminRowUsername(username) {
+  return `${ADMIN_PREFIX}${normalizeUsername(username)}`;
+}
+
+function makeLicenseRowUsername(key) {
+  return `${LICENSE_PREFIX}${String(key || "").trim().toUpperCase()}`;
+}
+
+function parseAdminUsername(rowUsername) {
+  return String(rowUsername || "").startsWith(ADMIN_PREFIX) ? String(rowUsername).slice(ADMIN_PREFIX.length) : "";
+}
+
+function parseLicenseKey(rowUsername) {
+  return String(rowUsername || "").startsWith(LICENSE_PREFIX) ? String(rowUsername).slice(LICENSE_PREFIX.length) : "";
 }
 
 function createLicenseKey() {
@@ -107,114 +149,106 @@ function createLicenseKey() {
   return `BEASON-${chunks.join("-")}`;
 }
 
-async function getUserByUsername(username) {
-  const normalized = normalizeUsername(username);
-  if (!normalized) return null;
+async function getRowByUsername(rowUsername) {
   const rows = await supabaseRequest(
-    ADMIN_USERS_TABLE,
     "GET",
-    `?select=*&username=eq.${encodeURIComponent(normalized)}&limit=1`
+    `?select=*&username=eq.${encodeURIComponent(rowUsername)}&limit=1`
   );
   return Array.isArray(rows) && rows.length ? rows[0] : null;
 }
 
-async function getUserById(id) {
-  if (!id) return null;
+async function listRowsByPrefix(prefix) {
   const rows = await supabaseRequest(
-    ADMIN_USERS_TABLE,
     "GET",
-    `?select=*&id=eq.${encodeURIComponent(id)}&limit=1`
+    `?select=*&username=like.${encodeURIComponent(`${prefix}%`)}&order=created_at.asc`
   );
-  return Array.isArray(rows) && rows.length ? rows[0] : null;
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function upsertAdminUser({ username, passwordHash, role, status, displayName, managedBy }) {
+  const rowUsername = makeAdminRowUsername(username);
+  const existing = await getRowByUsername(rowUsername);
+  const payload = {
+    username: rowUsername,
+    hwid: null,
+    display_name: String(displayName || username).trim() || username,
+    first_name: normalizeRole(role),
+    last_name: String(managedBy || "").trim() || null,
+    status: normalizeStatus(status),
+    deactivation_reason: null,
+    attempt_count: 0,
+    best_score: 0,
+    latest_score: 0,
+    recent_attempts: [],
+    license_validated: true,
+    license_blocked: false,
+    app_version: String(passwordHash || "").trim(),
+    last_seen_at: new Date().toISOString(),
+  };
+
+  if (!existing) {
+    const rows = await supabaseRequest("POST", "", payload);
+    return Array.isArray(rows) ? rows[0] : rows;
+  }
+
+  const rows = await supabaseRequest(
+    "PATCH",
+    `?id=eq.${encodeURIComponent(existing.id)}`,
+    payload
+  );
+  return Array.isArray(rows) ? rows[0] : existing;
 }
 
 async function ensureDefaultUsers() {
   for (const user of DEFAULT_USERS) {
-    const existing = await getUserByUsername(user.username);
+    const existing = await getRowByUsername(makeAdminRowUsername(user.username));
     if (existing) continue;
-    await supabaseRequest(ADMIN_USERS_TABLE, "POST", "", {
-      username: user.username,
-      display_name: user.displayName,
-      password_hash: user.passwordHash,
-      role: user.role,
-      status: user.status,
-      managed_by: null,
-    });
+    await upsertAdminUser(user);
   }
 }
 
-async function createSession(user) {
-  const token = randomToken(24);
-  const tokenHash = sha256(token);
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  await supabaseRequest(ADMIN_SESSIONS_TABLE, "POST", "", {
-    user_id: user.id,
-    token_hash: tokenHash,
-    expires_at: expiresAt,
-  });
-  return { token, expiresAt };
-}
-
-async function deleteSessionByToken(token) {
-  if (!token) return;
-  await supabaseRequest(
-    ADMIN_SESSIONS_TABLE,
-    "DELETE",
-    `?token_hash=eq.${encodeURIComponent(sha256(token))}`
-  );
-}
-
-function extractBearerToken(req) {
-  const header = String(req.headers.authorization || "").trim();
-  if (!header.toLowerCase().startsWith("bearer ")) return "";
-  return header.slice(7).trim();
-}
-
-function sanitizeUser(user) {
+function mapAdminRow(row) {
   return {
-    id: user.id,
-    username: user.username,
-    displayName: user.display_name || user.username,
-    role: user.role,
-    status: user.status,
-    managedBy: user.managed_by || null,
-    lastLoginAt: user.last_login_at || null,
-    createdAt: user.created_at || null,
+    id: row.id,
+    username: parseAdminUsername(row.username),
+    displayName: row.display_name || parseAdminUsername(row.username),
+    role: normalizeRole(row.first_name || "reseller"),
+    status: normalizeStatus(row.status),
+    managedBy: row.last_name || null,
+    passwordHash: row.app_version || "",
+    lastLoginAt: row.last_seen_at || null,
+    createdAt: row.created_at || null,
   };
 }
 
+function mapLicenseRow(row) {
+  return {
+    id: row.id,
+    licenseKey: parseLicenseKey(row.username),
+    targetHwid: row.display_name || "",
+    generatedBy: row.first_name || "",
+    note: row.last_name || "",
+    status: row.status || "active",
+    generatedAt: row.created_at || null,
+  };
+}
+
+async function getAdminUser(username) {
+  const row = await getRowByUsername(makeAdminRowUsername(username));
+  return row ? mapAdminRow(row) : null;
+}
+
 async function requireAuth(req) {
-  const token = extractBearerToken(req);
-  if (!token) {
+  const header = String(req.headers.authorization || "").trim();
+  if (!header.toLowerCase().startsWith("bearer ")) {
     const error = new Error("Missing session token.");
     error.statusCode = 401;
     throw error;
   }
 
-  const rows = await supabaseRequest(
-    ADMIN_SESSIONS_TABLE,
-    "GET",
-    `?select=*&token_hash=eq.${encodeURIComponent(sha256(token))}&limit=1`
-  );
-  const session = Array.isArray(rows) && rows.length ? rows[0] : null;
-  if (!session) {
-    const error = new Error("Session expired. Please sign in again.");
-    error.statusCode = 401;
-    throw error;
-  }
-
-  if (session.expires_at && new Date(session.expires_at).getTime() < Date.now()) {
-    await supabaseRequest(
-      ADMIN_SESSIONS_TABLE,
-      "DELETE",
-      `?id=eq.${encodeURIComponent(session.id)}`
-    );
-    const error = new Error("Session expired. Please sign in again.");
-    error.statusCode = 401;
-    throw error;
-  }
-
-  const user = await getUserById(session.user_id);
+  const token = header.slice(7).trim();
+  const payload = decodeToken(token);
+  const user = await getAdminUser(payload.username);
   if (!user) {
     const error = new Error("User not found.");
     error.statusCode = 401;
@@ -233,42 +267,42 @@ function requireOwner(user) {
 }
 
 function assertCanGenerate(user) {
-  const status = normalizeStatus(user.status);
-  if (status !== "active") {
+  if (normalizeRole(user.role) === "reseller" && normalizeStatus(user.status) !== "active") {
     const error = new Error("This reseller is currently not allowed to generate keys.");
     error.statusCode = 403;
     throw error;
   }
 }
 
-async function listUsers() {
-  const rows = await supabaseRequest(
-    ADMIN_USERS_TABLE,
-    "GET",
-    "?select=*&order=created_at.asc"
-  );
-  return Array.isArray(rows) ? rows : [];
+async function listAdminUsers() {
+  return (await listRowsByPrefix(ADMIN_PREFIX)).map(mapAdminRow);
 }
 
-async function listKeys() {
-  const rows = await supabaseRequest(
-    LICENSE_KEYS_TABLE,
-    "GET",
-    "?select=*&order=created_at.desc"
-  );
-  return Array.isArray(rows) ? rows : [];
+async function listLicenseKeys() {
+  return (await listRowsByPrefix(LICENSE_PREFIX))
+    .map(mapLicenseRow)
+    .sort((a, b) => new Date(b.generatedAt || 0).getTime() - new Date(a.generatedAt || 0).getTime());
 }
 
 async function buildOverviewFor(user) {
-  const users = await listUsers();
-  const keys = await listKeys();
+  const users = await listAdminUsers();
+  const keys = await listLicenseKeys();
   const visibleKeys = normalizeRole(user.role) === "owner"
     ? keys
-    : keys.filter((item) => item.generated_by === user.id);
+    : keys.filter((item) => normalizeUsername(item.generatedBy) === normalizeUsername(user.username));
 
   return {
     ok: true,
-    currentUser: sanitizeUser(user),
+    currentUser: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      role: user.role,
+      status: user.status,
+      managedBy: user.managedBy,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+    },
     stats: {
       totalKeys: keys.length,
       visibleKeys: visibleKeys.length,
@@ -278,55 +312,72 @@ async function buildOverviewFor(user) {
     resellers: users
       .filter((item) => item.role === "reseller")
       .map((item) => {
-        const resellerKeys = keys.filter((key) => key.generated_by === item.id);
+        const resellerKeys = keys.filter((key) => normalizeUsername(key.generatedBy) === normalizeUsername(item.username));
         return {
-          ...sanitizeUser(item),
+          id: item.id,
+          username: item.username,
+          displayName: item.displayName,
+          role: item.role,
+          status: item.status,
+          managedBy: item.managedBy,
+          lastLoginAt: item.lastLoginAt,
+          createdAt: item.createdAt,
           totalKeys: resellerKeys.length,
-          recentKeyAt: resellerKeys[0]?.created_at || null,
+          recentKeyAt: resellerKeys[0]?.generatedAt || null,
         };
       }),
-    keys: visibleKeys.map((item) => ({
-      id: item.id,
-      licenseKey: item.license_key,
-      targetHwid: item.target_hwid || "",
-      note: item.note || "",
-      status: item.status || "active",
-      generatedBy: item.generated_by_username || "",
-      generatedAt: item.created_at || null,
-    })),
+    keys: visibleKeys,
   };
 }
 
 async function login(username, password) {
   await ensureDefaultUsers();
-  const user = await getUserByUsername(username);
-  if (!user || user.password_hash !== sha256(password)) {
+  const user = await getAdminUser(username);
+  if (!user || user.passwordHash !== sha256(password)) {
     const error = new Error("Invalid username or password.");
     error.statusCode = 401;
     throw error;
   }
 
-  const status = normalizeStatus(user.status);
-  if (status !== "active" && user.role !== "owner") {
-    const error = new Error(`This account is ${status} and cannot sign in right now.`);
+  if (user.role !== "owner" && normalizeStatus(user.status) !== "active") {
+    const error = new Error(`This account is ${user.status} and cannot sign in right now.`);
     error.statusCode = 403;
     throw error;
   }
 
-  await supabaseRequest(
-    ADMIN_USERS_TABLE,
-    "PATCH",
-    `?id=eq.${encodeURIComponent(user.id)}`,
-    { last_login_at: new Date().toISOString() }
-  );
+  await upsertAdminUser({
+    username: user.username,
+    passwordHash: user.passwordHash,
+    role: user.role,
+    status: user.status,
+    displayName: user.displayName,
+    managedBy: user.managedBy,
+  });
 
-  const session = await createSession(user);
+  const token = encodeToken({
+    username: user.username,
+    exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000,
+  });
+
   return {
     ok: true,
-    token: session.token,
-    expiresAt: session.expiresAt,
-    user: sanitizeUser(user),
+    token,
+    expiresAt: new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      role: user.role,
+      status: user.status,
+      managedBy: user.managedBy,
+      lastLoginAt: new Date().toISOString(),
+      createdAt: user.createdAt,
+    },
   };
+}
+
+async function deleteSessionByToken() {
+  return true;
 }
 
 async function createReseller(ownerUser, payload = {}) {
@@ -334,74 +385,87 @@ async function createReseller(ownerUser, payload = {}) {
   const username = normalizeUsername(payload.username);
   const password = String(payload.password || "").trim();
   const displayName = String(payload.displayName || username).trim();
-
   if (!username || !password) {
     const error = new Error("Username and password are required.");
     error.statusCode = 400;
     throw error;
   }
 
-  const existing = await getUserByUsername(username);
+  const existing = await getAdminUser(username);
   if (existing) {
     const error = new Error("That username already exists.");
     error.statusCode = 409;
     throw error;
   }
 
-  const rows = await supabaseRequest(ADMIN_USERS_TABLE, "POST", "", {
+  const row = await upsertAdminUser({
     username,
-    display_name: displayName || username,
-    password_hash: sha256(password),
+    passwordHash: sha256(password),
     role: "reseller",
     status: "active",
-    managed_by: ownerUser.id,
+    displayName: displayName || username,
+    managedBy: ownerUser.username,
   });
 
+  const reseller = mapAdminRow(row);
   return {
     ok: true,
-    reseller: sanitizeUser(Array.isArray(rows) ? rows[0] : rows),
+    reseller: {
+      id: reseller.id,
+      username: reseller.username,
+      displayName: reseller.displayName,
+      role: reseller.role,
+      status: reseller.status,
+      managedBy: reseller.managedBy,
+      lastLoginAt: reseller.lastLoginAt,
+      createdAt: reseller.createdAt,
+    },
   };
 }
 
 async function updateReseller(ownerUser, payload = {}) {
   requireOwner(ownerUser);
   const username = normalizeUsername(payload.username);
-  const nextStatus = normalizeStatus(payload.status);
   if (!username) {
     const error = new Error("Reseller username is required.");
     error.statusCode = 400;
     throw error;
   }
 
-  const reseller = await getUserByUsername(username);
+  const reseller = await getAdminUser(username);
   if (!reseller || reseller.role !== "reseller") {
     const error = new Error("Reseller not found.");
     error.statusCode = 404;
     throw error;
   }
 
-  const patch = { status: nextStatus };
-  if (payload.password) patch.password_hash = sha256(payload.password);
-  if (payload.displayName) patch.display_name = String(payload.displayName).trim();
+  const row = await upsertAdminUser({
+    username: reseller.username,
+    passwordHash: payload.password ? sha256(payload.password) : reseller.passwordHash,
+    role: "reseller",
+    status: payload.status || reseller.status,
+    displayName: payload.displayName || reseller.displayName,
+    managedBy: reseller.managedBy || ownerUser.username,
+  });
 
-  const rows = await supabaseRequest(
-    ADMIN_USERS_TABLE,
-    "PATCH",
-    `?id=eq.${encodeURIComponent(reseller.id)}`,
-    patch
-  );
-
+  const next = mapAdminRow(row);
   return {
     ok: true,
-    reseller: sanitizeUser(Array.isArray(rows) ? rows[0] : rows),
+    reseller: {
+      id: next.id,
+      username: next.username,
+      displayName: next.displayName,
+      role: next.role,
+      status: next.status,
+      managedBy: next.managedBy,
+      lastLoginAt: next.lastLoginAt,
+      createdAt: next.createdAt,
+    },
   };
 }
 
 async function generateKey(actorUser, payload = {}) {
-  if (normalizeRole(actorUser.role) === "reseller") {
-    assertCanGenerate(actorUser);
-  }
-
+  assertCanGenerate(actorUser);
   const targetHwid = String(payload.targetHwid || "").trim();
   const note = String(payload.note || "").trim();
   if (!targetHwid) {
@@ -410,27 +474,34 @@ async function generateKey(actorUser, payload = {}) {
     throw error;
   }
 
-  const rows = await supabaseRequest(LICENSE_KEYS_TABLE, "POST", "", {
-    license_key: createLicenseKey(),
-    target_hwid: targetHwid,
-    note,
+  let key = createLicenseKey();
+  while (await getRowByUsername(makeLicenseRowUsername(key))) {
+    key = createLicenseKey();
+  }
+
+  const rows = await supabaseRequest("POST", "", {
+    username: makeLicenseRowUsername(key),
+    hwid: null,
+    display_name: targetHwid,
+    first_name: actorUser.username,
+    last_name: note || null,
     status: "active",
-    generated_by: actorUser.id,
-    generated_by_username: actorUser.username,
+    deactivation_reason: null,
+    attempt_count: 0,
+    best_score: 0,
+    latest_score: 0,
+    recent_attempts: [],
+    license_validated: true,
+    license_blocked: false,
+    app_version: "license",
+    last_seen_at: new Date().toISOString(),
   });
 
   const row = Array.isArray(rows) ? rows[0] : rows;
+  const item = mapLicenseRow(row);
   return {
     ok: true,
-    key: {
-      id: row.id,
-      licenseKey: row.license_key,
-      targetHwid: row.target_hwid,
-      note: row.note || "",
-      status: row.status || "active",
-      generatedBy: row.generated_by_username || actorUser.username,
-      generatedAt: row.created_at || null,
-    },
+    key: item,
   };
 }
 
