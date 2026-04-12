@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BEASON Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #081420;
+      --panel: rgba(12, 29, 45, 0.9);
+      --panel-soft: rgba(17, 40, 60, 0.82);
+      --text: #edf6ff;
+      --muted: #99b6ce;
+      --line: rgba(155, 204, 241, 0.16);
+      --accent: #6fd2ff;
+      --accent-2: #4f8dff;
+      --ok: #6be6a6;
+      --warn: #ffcf5b;
+      --danger: #ff7b6f;
+      --radius: 8px;
+      --shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+      font-family: "Inter", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 0 0, rgba(111, 210, 255, 0.18), transparent 25%),
+        radial-gradient(circle at 100% 0, rgba(79, 141, 255, 0.16), transparent 22%),
+        linear-gradient(180deg, #05111b 0%, #0b1a29 100%);
+    }
+    button, input, select { font: inherit; }
+    .page {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+    .hero, .panel, .stat, .key-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      font-size: clamp(2.3rem, 5vw, 4.3rem);
+      line-height: 0.96;
+      margin-bottom: 14px;
+      max-width: 12ch;
+    }
+    p {
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+    .login-card {
+      background: var(--panel-soft);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .field-grid,
+    .form-grid,
+    .stats,
+    .layout,
+    .reseller-grid,
+    .keys-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .field-grid { grid-template-columns: 1fr 1fr; }
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    input, select {
+      width: 100%;
+      min-height: 48px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 0 14px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    button {
+      min-height: 46px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+    }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #07131f;
+    }
+    button.warn {
+      background: rgba(255, 207, 91, 0.14);
+      border-color: rgba(255, 207, 91, 0.28);
+    }
+    button.danger {
+      background: rgba(255, 123, 111, 0.12);
+      border-color: rgba(255, 123, 111, 0.28);
+    }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .stat, .panel, .key-card {
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .stat strong {
+      display: block;
+      margin-top: 8px;
+      font-size: clamp(1.7rem, 3vw, 2.7rem);
+    }
+    .layout {
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: start;
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .panel-head h2, .panel h3 { margin-bottom: 0; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .pill.active { color: var(--ok); border-color: rgba(107, 230, 166, 0.28); }
+    .pill.paused { color: var(--warn); border-color: rgba(255, 207, 91, 0.28); }
+    .pill.restricted { color: var(--danger); border-color: rgba(255, 123, 111, 0.28); }
+    .reseller-grid, .keys-grid { max-height: 760px; overflow: auto; }
+    .reseller-card, .key-card { background: rgba(255,255,255,0.03); }
+    .reseller-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .reseller-card header, .key-card header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.7;
+    }
+    .key-card strong {
+      display: block;
+      font-size: 1.05rem;
+      word-break: break-word;
+      margin-bottom: 10px;
+    }
+    .hint, .message {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .message { min-height: 22px; }
+    .hidden { display: none !important; }
+    @media (max-width: 1040px) {
+      .hero, .layout, .stats, .field-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">BEASON Admin</p>
+        <h1>Manage resellers and generate activation keys.</h1>
+        <p>
+          Owners can see every generated key, create reseller accounts, and pause or restrict resellers.
+          Resellers can generate unlimited keys for specific HWIDs while every key stays logged.
+        </p>
+      </div>
+      <div class="login-card">
+        <p class="eyebrow">Sign in</p>
+        <div class="field-grid">
+          <label>Username<input id="usernameInput" type="text" autocomplete="username" placeholder="bison or hwid" /></label>
+          <label>Password<input id="passwordInput" type="password" autocomplete="current-password" placeholder="Enter password" /></label>
+        </div>
+        <div class="actions">
+          <button id="loginBtn" class="primary" type="button">Sign in</button>
+          <button id="logoutBtn" type="button">Sign out</button>
+          <button id="refreshBtn" type="button">Refresh</button>
+        </div>
+        <div class="hint">Default owner: bison / Victoris13? | reseller: hwid / 123b123</div>
+        <div id="message" class="message"></div>
+      </div>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="stats">
+        <article class="stat"><p class="eyebrow">Signed in as</p><strong id="currentUserName">-</strong><div id="currentUserMeta" class="meta"></div></article>
+        <article class="stat"><p class="eyebrow">All keys</p><strong id="totalKeys">0</strong></article>
+        <article class="stat"><p class="eyebrow">Visible keys</p><strong id="visibleKeys">0</strong></article>
+        <article class="stat"><p class="eyebrow">Resellers limited</p><strong id="pausedResellers">0</strong></article>
+      </div>
+
+      <div class="layout" style="margin-top: 18px;">
+        <section class="panel">
+          <div class="panel-head"><h2>Key generator</h2><span id="rolePill" class="pill">-</span></div>
+          <div class="form-grid">
+            <label>Target HWID<input id="targetHwidInput" type="text" placeholder="PC-1234-ABCD" /></label>
+            <label>Note<input id="noteInput" type="text" placeholder="Optional note for this key" /></label>
+            <div class="actions"><button id="generateBtn" class="primary" type="button">Generate key</button></div>
+            <div id="keyMessage" class="message"></div>
+          </div>
+        </section>
+
+        <section id="ownerPanel" class="panel hidden">
+          <div class="panel-head"><h2>Create reseller</h2><span class="pill active">Owner only</span></div>
+          <div class="form-grid">
+            <label>Display name<input id="resellerNameInput" type="text" placeholder="Agent Prime" /></label>
+            <label>Username<input id="resellerUsernameInput" type="text" placeholder="agentprime" /></label>
+            <label>Password<input id="resellerPasswordInput" type="text" placeholder="Create a password" /></label>
+            <div class="actions"><button id="createResellerBtn" class="primary" type="button">Create reseller</button></div>
+            <div id="resellerMessage" class="message"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="layout" style="margin-top: 18px;">
+        <section class="panel">
+          <div class="panel-head"><h2>Generated keys</h2><span class="pill">Logged</span></div>
+          <div id="keysGrid" class="keys-grid"><div class="hint">No keys yet.</div></div>
+        </section>
+
+        <section id="resellerPanel" class="panel hidden">
+          <div class="panel-head"><h2>Resellers</h2><span class="pill">Owner view</span></div>
+          <div id="resellerGrid" class="reseller-grid"><div class="hint">No reseller accounts yet.</div></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const tokenKey = "beason_admin_token";
+    const message = document.getElementById("message");
+    const keyMessage = document.getElementById("keyMessage");
+    const resellerMessage = document.getElementById("resellerMessage");
+    const dashboard = document.getElementById("dashboard");
+    const ownerPanel = document.getElementById("ownerPanel");
+    const resellerPanel = document.getElementById("resellerPanel");
+    const rolePill = document.getElementById("rolePill");
+    const currentUserName = document.getElementById("currentUserName");
+    const currentUserMeta = document.getElementById("currentUserMeta");
+    const totalKeys = document.getElementById("totalKeys");
+    const visibleKeys = document.getElementById("visibleKeys");
+    const pausedResellers = document.getElementById("pausedResellers");
+    const keysGrid = document.getElementById("keysGrid");
+    const resellerGrid = document.getElementById("resellerGrid");
+
+    const usernameInput = document.getElementById("usernameInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const targetHwidInput = document.getElementById("targetHwidInput");
+    const noteInput = document.getElementById("noteInput");
+    const resellerNameInput = document.getElementById("resellerNameInput");
+    const resellerUsernameInput = document.getElementById("resellerUsernameInput");
+    const resellerPasswordInput = document.getElementById("resellerPasswordInput");
+
+    function setMessage(target, text, tone) {
+      target.textContent = text || "";
+      target.style.color = tone === "error" ? "var(--danger)" : tone === "success" ? "var(--ok)" : "var(--muted)";
+    }
+
+    function getToken() {
+      return localStorage.getItem(tokenKey) || "";
+    }
+
+    function saveSession(token) {
+      localStorage.setItem(tokenKey, token);
+    }
+
+    function clearSession() {
+      localStorage.removeItem(tokenKey);
+      dashboard.classList.add("hidden");
+      ownerPanel.classList.add("hidden");
+      resellerPanel.classList.add("hidden");
+    }
+
+    async function api(path, body = {}) {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getToken() ? `Bearer ${getToken()}` : "",
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Request failed.");
+      return data;
+    }
+
+    function formatDate(value) {
+      return value ? new Date(value).toLocaleString() : "-";
+    }
+
+    function statusClass(status) {
+      return status === "paused" ? "paused" : status === "restricted" ? "restricted" : "active";
+    }
+
+    function renderKeys(keys) {
+      if (!keys.length) {
+        keysGrid.innerHTML = '<div class="hint">No keys yet.</div>';
+        return;
+      }
+      keysGrid.innerHTML = keys.map((item) => `
+        <article class="key-card">
+          <header>
+            <div>
+              <strong>${item.licenseKey}</strong>
+              <div class="meta">HWID: ${item.targetHwid || "-"}</div>
+            </div>
+            <span class="pill active">${item.generatedBy}</span>
+          </header>
+          <div class="meta">Created: ${formatDate(item.generatedAt)}</div>
+          <div class="meta">Note: ${item.note || "-"}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderResellers(resellers) {
+      if (!resellers.length) {
+        resellerGrid.innerHTML = '<div class="hint">No reseller accounts yet.</div>';
+        return;
+      }
+
+      resellerGrid.innerHTML = resellers.map((item) => `
+        <article class="reseller-card">
+          <header>
+            <div>
+              <h3>${item.displayName}</h3>
+              <div class="meta">@${item.username}</div>
+            </div>
+            <span class="pill ${statusClass(item.status)}">${item.status}</span>
+          </header>
+          <div class="meta">Keys generated: ${item.totalKeys}</div>
+          <div class="meta">Last key: ${formatDate(item.recentKeyAt)}</div>
+          <div class="actions">
+            <button type="button" data-user="${item.username}" data-status="active">Set active</button>
+            <button type="button" class="warn" data-user="${item.username}" data-status="paused">Pause</button>
+            <button type="button" class="danger" data-user="${item.username}" data-status="restricted">Restrict</button>
+          </div>
+        </article>
+      `).join("");
+
+      resellerGrid.querySelectorAll("button[data-user]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          try {
+            await api("/api/admin/update-reseller", { username: button.dataset.user, status: button.dataset.status });
+            setMessage(resellerMessage, `Updated ${button.dataset.user} to ${button.dataset.status}.`, "success");
+            await loadOverview();
+          } catch (error) {
+            setMessage(resellerMessage, error.message, "error");
+          }
+        });
+      });
+    }
+
+    function renderOverview(data) {
+      dashboard.classList.remove("hidden");
+      currentUserName.textContent = data.currentUser.displayName;
+      currentUserMeta.textContent = `@${data.currentUser.username} | ${data.currentUser.status}`;
+      rolePill.textContent = data.currentUser.role;
+      rolePill.className = `pill ${statusClass(data.currentUser.status)}`;
+      totalKeys.textContent = String(data.stats.totalKeys);
+      visibleKeys.textContent = String(data.stats.visibleKeys);
+      pausedResellers.textContent = String(data.stats.pausedResellers);
+      ownerPanel.classList.toggle("hidden", data.currentUser.role !== "owner");
+      resellerPanel.classList.toggle("hidden", data.currentUser.role !== "owner");
+      renderKeys(data.keys || []);
+      renderResellers(data.currentUser.role === "owner" ? (data.resellers || []) : []);
+    }
+
+    async function loadOverview() {
+      const data = await api("/api/admin/overview");
+      renderOverview(data);
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      try {
+        const data = await api("/api/admin/login", { username: usernameInput.value, password: passwordInput.value });
+        saveSession(data.token);
+        setMessage(message, `Signed in as ${data.user.username}.`, "success");
+        await loadOverview();
+      } catch (error) {
+        clearSession();
+        setMessage(message, error.message, "error");
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        if (getToken()) await api("/api/admin/logout");
+      } catch (error) {}
+      clearSession();
+      setMessage(message, "Signed out.", "success");
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", async () => {
+      try {
+        await loadOverview();
+        setMessage(message, "Dashboard refreshed.", "success");
+      } catch (error) {
+        setMessage(message, error.message, "error");
+      }
+    });
+
+    document.getElementById("generateBtn").addEventListener("click", async () => {
+      try {
+        const data = await api("/api/admin/generate-key", { targetHwid: targetHwidInput.value, note: noteInput.value });
+        targetHwidInput.value = "";
+        noteInput.value = "";
+        setMessage(keyMessage, `Created ${data.key.licenseKey}`, "success");
+        await loadOverview();
+      } catch (error) {
+        setMessage(keyMessage, error.message, "error");
+      }
+    });
+
+    document.getElementById("createResellerBtn").addEventListener("click", async () => {
+      try {
+        await api("/api/admin/create-reseller", {
+          displayName: resellerNameInput.value,
+          username: resellerUsernameInput.value,
+          password: resellerPasswordInput.value,
+        });
+        resellerNameInput.value = "";
+        resellerUsernameInput.value = "";
+        resellerPasswordInput.value = "";
+        setMessage(resellerMessage, "Reseller created.", "success");
+        await loadOverview();
+      } catch (error) {
+        setMessage(resellerMessage, error.message, "error");
+      }
+    });
+
+    (async () => {
+      if (!getToken()) return;
+      try {
+        await loadOverview();
+      } catch (error) {
+        clearSession();
+      }
+    })();
+  </script>
+</body>
+</html>
