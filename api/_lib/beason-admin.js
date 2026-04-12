@@ -262,7 +262,7 @@ function issueProductKey(targetHwid, expiresUnix, kind = "standard") {
     v: 2,
     p: APP_PRODUCT_ID,
     pc: APP_PRODUCT_CODE,
-    h: crypto.createHash("sha256").update(normalizedHwid, "utf8").digest("base64url"),
+    h: crypto.createHash("sha256").update(normalizedHwid, "utf8").digest("hex"),
     n: nowUnix,
     nb: nowUnix,
     e: expiresUnix,
