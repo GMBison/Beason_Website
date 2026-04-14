@@ -423,6 +423,32 @@ async function listLicenseKeys() {
     .sort((a, b) => new Date(b.generatedAt || 0).getTime() - new Date(a.generatedAt || 0).getTime());
 }
 
+async function deleteLicenseKey(actorUser, keyId = "") {
+  requireOwner(actorUser);
+  const normalizedKeyId = String(keyId || "").trim().toLowerCase();
+  if (!normalizedKeyId) {
+    const error = new Error("Key log id is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const rows = await supabaseRequest(
+    "DELETE",
+    `?username=eq.${encodeURIComponent(makeLicenseRowUsername(normalizedKeyId))}`
+  );
+
+  if (!Array.isArray(rows) || !rows.length) {
+    const error = new Error("Key log not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    ok: true,
+    deletedKeyId: normalizedKeyId,
+  };
+}
+
 async function buildOverviewFor(user) {
   const users = await listAdminUsers();
   const keys = await listLicenseKeys();
@@ -677,4 +703,5 @@ module.exports = {
   createReseller,
   updateReseller,
   generateKey,
+  deleteLicenseKey,
 };

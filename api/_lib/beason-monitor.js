@@ -102,6 +102,27 @@ async function findLearner({ username = "", hwid = "" } = {}) {
   return Array.isArray(rows) && rows.length ? rows[0] : null;
 }
 
+async function findLearnerByUsername(username = "") {
+  const normalizedUsername = normalizeUsername(username);
+  if (!normalizedUsername) return null;
+  const rows = await supabaseRequest(
+    "GET",
+    `?select=*&username=eq.${encodeURIComponent(normalizedUsername)}&order=last_seen_at.desc.nullslast&limit=1`
+  );
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+}
+
+async function findDeviceHeartbeatRow(hwid = "") {
+  const normalizedHwid = normalizeHwid(hwid);
+  if (!normalizedHwid) return null;
+  const rows = await supabaseRequest(
+    "GET",
+    `?select=*&hwid=eq.${encodeURIComponent(normalizedHwid)}&order=last_seen_at.desc.nullslast`
+  );
+  const allRows = Array.isArray(rows) ? rows : [];
+  return allRows.find((row) => isDeviceHeartbeatUsername(row.username)) || null;
+}
+
 async function findLearnersByHwid(hwid = "") {
   const normalizedHwid = normalizeHwid(hwid);
   if (!normalizedHwid) return [];
@@ -140,10 +161,15 @@ async function getDeviceStatus({ username = "", hwid = "" } = {}) {
 }
 
 async function upsertLearner(user = {}) {
-  const existing = await findLearner(user);
+  const normalizedUsername = normalizeUsername(user.username);
+  const normalizedHwid = normalizeHwid(user.hwid);
+  const isHeartbeat = isDeviceHeartbeatUsername(normalizedUsername);
+  const existing = isHeartbeat
+    ? await findDeviceHeartbeatRow(normalizedHwid)
+    : await findLearnerByUsername(normalizedUsername);
   const payload = {
-    username: normalizeUsername(user.username),
-    hwid: normalizeHwid(user.hwid),
+    username: normalizedUsername,
+    hwid: normalizedHwid,
     display_name: buildDisplayName(user),
     first_name: String(user.firstName || "").trim() || null,
     last_name: String(user.lastName || "").trim() || null,
@@ -346,6 +372,7 @@ module.exports = {
   ensureAuthorized,
   readBody,
   findLearner,
+  findLearnerByUsername,
   findLearnersByHwid,
   getDeviceStatus,
   upsertLearner,
