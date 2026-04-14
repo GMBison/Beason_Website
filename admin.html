@@ -621,7 +621,7 @@
           if (!keyId) return;
           if (!confirm("Delete this key log? This removes it from the owner logs table.")) return;
           try {
-            await api("/api/admin/delete-key-log", { keyId });
+            await api("/api/admin/overview", { deleteKeyId: keyId });
             setMessage(keyMessage, "Log deleted.", "success");
             await loadOverview();
           } catch (error) {

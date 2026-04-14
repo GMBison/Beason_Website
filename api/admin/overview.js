@@ -1,4 +1,4 @@
-const { handleCors, sendJson, requireAuth, buildOverviewFor } = require("../_lib/beason-admin");
+const { handleCors, sendJson, readBody, requireAuth, buildOverviewFor, deleteLicenseKey } = require("../_lib/beason-admin");
 
 module.exports = async (req, res) => {
   if (handleCors(req, res)) return;
@@ -9,6 +9,10 @@ module.exports = async (req, res) => {
 
   try {
     const auth = await requireAuth(req);
+    const body = await readBody(req);
+    if (body?.deleteKeyId) {
+      await deleteLicenseKey(auth.user, body.deleteKeyId);
+    }
     const result = await buildOverviewFor(auth.user);
     sendJson(res, 200, result);
   } catch (error) {
