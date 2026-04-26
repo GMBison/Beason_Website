@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Try BEASON CBT | Browser CBT App</title>
-    <link rel="stylesheet" href="/trybeason/styles.css?v=beason-20260426-app" />
+    <link rel="stylesheet" href="/trybeason/styles.css?v=beason-20260426-loader" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,6 +15,32 @@
   <body>
     <main class="app-shell" aria-label="BEASON CBT Android app">
       <section class="app-view">
+        <section class="startup-screen" id="startup-screen" aria-label="BEASON CBT startup">
+          <div class="startup-grid" aria-hidden="true"></div>
+          <div class="startup-core">
+            <div class="startup-orbit">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="startup-brand">
+              <strong>BEASON CBT</strong>
+              <small>Initializing exam mode</small>
+            </div>
+          </div>
+          <div class="startup-progress" aria-hidden="true"><span></span></div>
+        </section>
+
+        <section class="exam-loader" id="exam-loader" aria-live="polite" aria-hidden="true">
+          <div class="hand-loader" aria-hidden="true">
+            <span class="finger finger-one"></span>
+            <span class="finger finger-two"></span>
+            <span class="finger finger-three"></span>
+            <span class="finger finger-four"></span>
+            <span class="palm"></span>
+          </div>
+          <strong id="exam-loader-title">Preparing exam</strong>
+          <small id="exam-loader-copy">Syncing your CBT session</small>
+        </section>
+
         <header class="app-header">
           <button class="brand" data-page="home" aria-label="Go to home">
             <span class="brand-mark">B</span>
@@ -328,6 +354,6 @@
         </nav>
       </section>
     </main>
-    <script src="/trybeason/script.js?v=beason-20260426-app"></script>
+    <script src="/trybeason/script.js?v=beason-20260426-loader"></script>
   </body>
 </html>

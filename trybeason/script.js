@@ -4,6 +4,10 @@ const dockButtons = document.querySelectorAll(".floating-dock [data-page]");
 const screenBody = document.querySelector(".screen-body");
 const slides = document.querySelectorAll(".slide");
 const slideButtons = document.querySelectorAll("[data-slide]");
+const startupScreen = document.querySelector("#startup-screen");
+const examLoader = document.querySelector("#exam-loader");
+const examLoaderTitle = document.querySelector("#exam-loader-title");
+const examLoaderCopy = document.querySelector("#exam-loader-copy");
 
 const state = {
   index: null,
@@ -34,6 +38,7 @@ const state = {
 let activeSlide = 0;
 let slideTimer;
 let toastTimer;
+let transitionActive = false;
 const historyKey = "beasonExamHistory";
 const settingsKey = "beasonSettings";
 
@@ -68,6 +73,30 @@ function toast(message) {
   toastEl.classList.add("show");
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => toastEl.classList.remove("show"), 1800);
+}
+
+function hideStartupScreen() {
+  window.setTimeout(() => {
+    startupScreen?.classList.add("hide");
+    if (startupScreen) startupScreen.hidden = true;
+  }, 3000);
+}
+
+function runExamLoader(title, copy) {
+  if (!examLoader) return Promise.resolve();
+  transitionActive = true;
+  examLoaderTitle.textContent = title;
+  examLoaderCopy.textContent = copy;
+  examLoader.classList.add("show");
+  examLoader.setAttribute("aria-hidden", "false");
+  return new Promise((resolve) => {
+    window.setTimeout(() => {
+      examLoader.classList.remove("show");
+      examLoader.setAttribute("aria-hidden", "true");
+      transitionActive = false;
+      resolve();
+    }, 2500);
+  });
 }
 
 function showSlide(index) {
@@ -409,12 +438,14 @@ async function buildSession(exam) {
 }
 
 async function startExam(exam) {
+  if (transitionActive) return;
   toast("Loading questions...");
   const session = await buildSession(exam);
   if (!session || session.questions.length === 0) {
     toast("No questions available for this setup");
     return;
   }
+  await runExamLoader("Preparing exam", "Building your CBT session");
   window.clearInterval(state.timerId);
   state.session = session;
   state.current = 0;
@@ -558,7 +589,8 @@ function saveHistory(summary) {
   }
 }
 
-function submitExam(status = "submitted") {
+async function submitExam(status = "submitted") {
+  if (transitionActive) return;
   if (!state.session) return;
   document.querySelector("#calculator").classList.remove("show");
   window.clearInterval(state.timerId);
@@ -572,6 +604,9 @@ function submitExam(status = "submitted") {
     <span>${status === "quit" ? "Quit before final submit" : "Submitted"}</span>
   `;
   renderSubjectBreakdown(summary);
+  if (status === "submitted") {
+    await runExamLoader("Submitting exam", "Calculating your result");
+  }
   showPage("result");
 }
 
@@ -755,6 +790,7 @@ document.querySelectorAll("[data-close-answer]").forEach((button) => button.addE
 loadStoredState();
 showSlide(0);
 restartSlideshow();
+hideStartupScreen();
 loadIndex().catch((error) => {
   console.error(error);
   toast("Open http://127.0.0.1:4177/index.html to load questions.");
