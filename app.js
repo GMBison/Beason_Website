@@ -188,7 +188,8 @@
       });
     });
 
-    syncDownloadButtons();
+    const hashPlatform = window.location.hash.replace("#", "");
+    selectPlatform(labels[hashPlatform] ? hashPlatform : selectedPlatform);
   }
 
   if (!reduceMotion) {
