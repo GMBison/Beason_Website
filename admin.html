@@ -300,8 +300,8 @@
           <div id="welcomeMeta" class="meta"></div>
         </div>
         <div class="toolbar-actions">
-          <button id="viewLogsBtn" type="button" class="hidden">View logs</button>
-          <button id="manageResellersBtn" type="button" class="hidden">Manage resellers</button>
+          <button id="viewLogCBTn" type="button" class="hidden">View logs</button>
+          <button id="manageResellerCBTn" type="button" class="hidden">Manage resellers</button>
           <button id="refreshBtn" type="button">Refresh</button>
           <button id="logoutBtn" type="button">Logout</button>
         </div>
@@ -433,8 +433,8 @@
     const welcomeName = document.getElementById("welcomeName");
     const welcomeMeta = document.getElementById("welcomeMeta");
     const rolePill = document.getElementById("rolePill");
-    const viewLogsBtn = document.getElementById("viewLogsBtn");
-    const manageResellersBtn = document.getElementById("manageResellersBtn");
+    const viewLogCBTn = document.getElementById("viewLogCBTn");
+    const manageResellerCBTn = document.getElementById("manageResellerCBTn");
     const copyLatestBtn = document.getElementById("copyLatestBtn");
     const logsModal = document.getElementById("logsModal");
     const resellersModal = document.getElementById("resellersModal");
@@ -682,8 +682,8 @@
       rolePill.className = `pill ${statusClass(data.currentUser.status)}`;
 
       const owner = data.currentUser.role === "owner";
-      viewLogsBtn.classList.toggle("hidden", !owner);
-      manageResellersBtn.classList.toggle("hidden", !owner);
+      viewLogCBTn.classList.toggle("hidden", !owner);
+      manageResellerCBTn.classList.toggle("hidden", !owner);
 
       if (owner) {
         renderLogs(data.keys || []);
@@ -800,8 +800,8 @@
       }
     });
 
-    viewLogsBtn.addEventListener("click", () => openModal(logsModal));
-    manageResellersBtn.addEventListener("click", () => openModal(resellersModal));
+    viewLogCBTn.addEventListener("click", () => openModal(logsModal));
+    manageResellerCBTn.addEventListener("click", () => openModal(resellersModal));
     logsFilterSelect.addEventListener("change", () => renderLogs(latestOverview?.keys || []));
 
     document.querySelectorAll("[data-close]").forEach((button) => {
