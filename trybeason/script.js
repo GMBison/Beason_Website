@@ -9,6 +9,16 @@ const examLoader = document.querySelector("#exam-loader");
 const examLoaderTitle = document.querySelector("#exam-loader-title");
 const examLoaderCopy = document.querySelector("#exam-loader-copy");
 
+function syncAppHeight() {
+  const height = window.visualViewport?.height || window.innerHeight;
+  document.documentElement.style.setProperty("--app-height", `${height}px`);
+}
+
+syncAppHeight();
+window.addEventListener("resize", syncAppHeight);
+window.visualViewport?.addEventListener("resize", syncAppHeight);
+window.visualViewport?.addEventListener("scroll", syncAppHeight);
+
 const state = {
   index: null,
   selectedExam: "JAMB",

@@ -19,6 +19,10 @@ body {
   min-height: 100%;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
   display: grid;
@@ -54,15 +58,18 @@ img {
 .app-shell {
   width: min(430px, 100vw);
   height: 100vh;
+  height: 100svh;
+  height: var(--app-height, 100dvh);
   display: grid;
   place-items: center;
   padding: 18px;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
 }
 
 .app-view {
   position: relative;
   width: min(390px, 100%);
-  height: min(844px, 100vh);
+  height: min(844px, 100%);
   overflow: hidden;
   border-radius: 34px;
   background:
@@ -358,7 +365,7 @@ img {
   z-index: 1;
   height: 100%;
   overflow-y: auto;
-  padding: 94px 22px 160px;
+  padding: 94px 22px calc(160px + env(safe-area-inset-bottom));
   scrollbar-width: none;
   scroll-behavior: smooth;
 }
@@ -1968,7 +1975,7 @@ p {
   z-index: 20;
   left: 28px;
   right: 28px;
-  bottom: 24px;
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
   height: 62px;
   display: grid;
   grid-template-columns: 46px 46px 46px 1fr;
@@ -2143,11 +2150,12 @@ p {
 @media (max-width: 430px) {
   .app-shell {
     padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .app-view {
     width: 100vw;
-    height: 100vh;
+    height: 100%;
     border-radius: 0;
   }
 }
