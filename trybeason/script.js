@@ -86,6 +86,7 @@ function hideStartupScreen() {
 function runExamLoader(title, copy) {
   if (!examLoader) return Promise.resolve();
   transitionActive = true;
+  examLoader.hidden = false;
   examLoaderTitle.textContent = title;
   examLoaderCopy.textContent = copy;
   examLoader.classList.add("show");
@@ -94,6 +95,7 @@ function runExamLoader(title, copy) {
     window.setTimeout(() => {
       examLoader.classList.remove("show");
       examLoader.setAttribute("aria-hidden", "true");
+      examLoader.hidden = true;
       transitionActive = false;
       resolve();
     }, 2500);
@@ -309,7 +311,7 @@ function populateStudyControls() {
   };
   studyExam.addEventListener("change", update);
   studySubject.addEventListener("change", updateStudySecondaryFilters);
-  document.querySelector("#apply-study-filter").addEventListener("click", renderStudyQuestion);
+  document.querySelector("#apply-study-filter").addEventListener("click", () => renderStudyQuestion(0));
   studySearch.addEventListener("keydown", (event) => {
     if (event.key === "Enter") renderStudyQuestion();
   });
@@ -342,6 +344,9 @@ function toggleJambSubject(slug, checkbox) {
     state.selectedSubjects.JAMB = selected.filter((item) => item !== slug);
   }
   updateJambSummary();
+  if ((state.selectedSubjects.JAMB || []).length === 4) {
+    document.querySelector('[data-menu="JAMB"]')?.classList.remove("show");
+  }
 }
 
 function updateJambSummary() {
@@ -364,17 +369,26 @@ async function loadSubjectQuestions(exam, slug) {
 }
 
 async function renderStudyQuestion(direction = 0) {
+  direction = Number.isFinite(direction) ? direction : 0;
   const box = document.querySelector("#study-question");
   const exam = document.querySelector("#study-exam").value;
   const slug = document.querySelector("#study-subject").value;
-  const year = document.querySelector("#study-year").value;
-  const type = document.querySelector("#study-type").value;
-  const topic = document.querySelector("#study-topic").value;
+  let year = document.querySelector("#study-year").value;
+  let type = document.querySelector("#study-type").value;
+  let topic = document.querySelector("#study-topic").value;
   const search = document.querySelector("#study-search").value.trim().toLowerCase();
   if (!slug) {
+    closeAnswerSheet();
     box.innerHTML = "<p>No subjects available for this exam yet.</p>";
     return;
   }
+  const subjectMeta = subjectsFor(exam).find((item) => item.slug === slug);
+  const validYears = subjectMeta?.years?.length
+    ? Array.from({ length: subjectMeta.years[1] - subjectMeta.years[0] + 1 }, (_, i) => String(subjectMeta.years[1] - i))
+    : [];
+  if (year && !validYears.includes(year)) year = "";
+  if (type && !Object.keys(subjectMeta?.types || {}).includes(type)) type = "";
+  if (topic && !(subjectMeta?.topics || []).some((item) => item.slug === topic)) topic = "";
   box.innerHTML = "<p>Loading question...</p>";
   const questions = await loadSubjectQuestions(exam, slug);
   const filtered = questions.filter((q) => {
@@ -385,6 +399,7 @@ async function renderStudyQuestion(direction = 0) {
     return matchesYear && matchesType && matchesTopic && matchesSearch;
   });
   if (!filtered.length) {
+    closeAnswerSheet();
     box.innerHTML = "<p>No question matches those filters. Try another year, type, topic, or search key.</p>";
     return;
   }

@@ -641,18 +641,15 @@ p {
 }
 
 .study-stepper {
-  position: sticky;
-  bottom: 76px;
-  z-index: 7;
   display: grid;
   grid-template-columns: 52px 1fr 52px;
   align-items: center;
   gap: 10px;
-  margin: 18px 0 10px;
+  margin: 16px 0 12px;
   padding: 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 16px 36px rgba(16, 17, 18, 0.12);
+  box-shadow: 0 10px 24px rgba(16, 17, 18, 0.1);
   backdrop-filter: blur(14px);
 }
 
