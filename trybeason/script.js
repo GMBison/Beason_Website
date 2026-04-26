@@ -176,7 +176,7 @@ function subjectsFor(exam) {
 }
 
 async function loadIndex() {
-  const res = await fetch("assets/data/question-index.json");
+  const res = await fetch("/trybeason/assets/data/question-index.json");
   state.index = await res.json();
   const total = Object.values(state.index.exams).reduce(
     (sum, exam) => sum + exam.subjects.reduce((subSum, subject) => subSum + subject.count, 0),
@@ -290,7 +290,7 @@ function updateJambSummary() {
 async function loadSubjectQuestions(exam, slug) {
   const key = `${exam}/${slug}`;
   if (state.cache.has(key)) return state.cache.get(key);
-  const res = await fetch(`assets/data/questions/${exam.toLowerCase()}/${slug}.json`);
+  const res = await fetch(`/trybeason/assets/data/questions/${exam.toLowerCase()}/${slug}.json`);
   if (!res.ok) throw new Error(`Could not load ${key}`);
   const data = await res.json();
   state.cache.set(key, data);
