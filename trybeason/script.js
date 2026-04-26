@@ -139,10 +139,42 @@ function applySettings() {
 
 function safeHtml(value) {
   const raw = String(value || "");
-  return raw
+  const cleaned = raw
     .replace(new RegExp("<script[\\s\\S]*?>[\\s\\S]*?</script>", "gi"), "")
     .replace(new RegExp("\\son\\w+=\"[^\"]*\"", "gi"), "")
     .replace(new RegExp("\\son\\w+='[^']*'", "gi"), "");
+  return renderLatexTables(cleaned);
+}
+
+function cleanLatexCell(value) {
+  return String(value || "")
+    .replace(new RegExp("\\\\hline", "g"), "")
+    .replace(new RegExp("\\\\text\\{([^}]*)\\}", "g"), "$1")
+    .replace(new RegExp("\\\\[()]", "g"), "")
+    .replace(new RegExp("\\\\", "g"), "")
+    .replace(new RegExp("\\s+", "g"), " ")
+    .trim();
+}
+
+function renderLatexTables(html) {
+  return html.replace(
+    new RegExp("\\\\\\(\\\\begin\\{array\\}\\{[^}]+\\}([\\s\\S]*?)\\\\end\\{array\\}\\\\\\)", "g"),
+    (_, body) => {
+      const rows = body
+        .split(new RegExp("\\\\\\\\"))
+        .map((row) => row.split("&").map(cleanLatexCell))
+        .map((cells) => cells.filter((cell, index) => cell || index < cells.length - 1))
+        .filter((cells) => cells.some(Boolean));
+
+      if (!rows.length) return "";
+
+      const width = Math.max(...rows.map((row) => row.length));
+      const normalized = rows.map((row) => Array.from({ length: width }, (_, index) => row[index] || ""));
+      return `<div class="latex-table-wrap"><table class="latex-table">${normalized
+        .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
+        .join("")}</table></div>`;
+    }
+  );
 }
 
 function titleCase(value) {

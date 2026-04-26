@@ -1173,6 +1173,43 @@ p {
   line-height: 1.55;
 }
 
+.latex-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin: 12px 0;
+  overflow-x: auto;
+  border: 1px solid rgba(16, 17, 18, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.latex-table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.latex-table td {
+  padding: 8px 9px;
+  border-bottom: 1px solid rgba(16, 17, 18, 0.08);
+  vertical-align: top;
+}
+
+.latex-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.latex-table td:nth-child(2),
+.latex-table td:nth-child(4),
+.latex-table td:nth-child(6) {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .app-view.large-text .question-text {
   font-size: 17px;
 }
