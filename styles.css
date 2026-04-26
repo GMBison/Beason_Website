@@ -295,6 +295,12 @@ h1,h2,h3,p { margin-top: 0; }
   background: rgba(100, 197, 255, 0.1);
   border-color: rgba(100, 197, 255, 0.16);
 }
+
+.platform-badge.beta {
+  color: #ff9f2d;
+  background: rgba(255, 159, 45, 0.12);
+  border-color: rgba(255, 159, 45, 0.28);
+}
 .timeline-card { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 18px; align-items: center; }
 .timeline-points { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .timeline-points div { padding: 18px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); }
