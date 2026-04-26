@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Try BEASON CBT | Browser CBT App</title>
+    <link rel="stylesheet" href="styles.css?v=beason-20260425-final2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="Try BEASON CBT in your browser">
+      <aside class="web-intro" aria-label="Browser preview information">
+        <a class="back-link" href="../index.html">Back to website</a>
+        <p class="intro-kicker">Try BEASON CBT online</p>
+        <h1>Use the Android mobile beta from any modern browser.</h1>
+        <p>
+          This browser version lets you explore the CBT app on iOS, Android, Windows, Mac, and tablets. For the strongest offline experience, download the Windows desktop app or Android beta.
+        </p>
+        <div class="intro-actions">
+          <a href="../download.html#android">Download Android beta</a>
+          <a href="../download.html#windows">Download Windows app</a>
+        </div>
+      </aside>
+      <section class="app-view">
+        <header class="app-header">
+          <button class="brand" data-page="home" aria-label="Go to home">
+            <span class="brand-mark">B</span>
+            <span>
+              <strong>Beason</strong>
+              <small>CBT Prep</small>
+            </span>
+          </button>
+          <button class="ghost-button" data-page="account" aria-label="Open account">
+            <img src="assets/icons/Account.svg" alt="" />
+          </button>
+        </header>
+
+        <div class="screen-body">
+          <section class="page active" data-view="home">
+            <section class="hero-card" aria-label="Beason CBT highlights">
+              <div class="hero-glow" aria-hidden="true"></div>
+              <article class="slide active">
+                <span class="slide-kicker">One-time activation</span>
+                <h1>One device. One activation. Exam prep unlocked.</h1>
+                <p>Practice with the same device license model planned for the Android app.</p>
+              </article>
+              <article class="slide">
+                <span class="slide-kicker">Massive question bank</span>
+                <h1>100,000+ questions built for serious practice.</h1>
+                <p>Load real past questions by exam body, subject, and year range.</p>
+              </article>
+              <article class="slide">
+                <span class="slide-kicker">JAMB + WAEC + NECO</span>
+                <h1>Exam modes from 1978 to 2025.</h1>
+                <p>Run timed CBT simulations with answer review and calculator support.</p>
+              </article>
+              <article class="slide">
+                <span class="slide-kicker">Premium Beason CBT</span>
+                <h1>Bring out the bison within you.</h1>
+                <p>Train with focused tools, cleaner reviews, and a bank built for serious exam day confidence.</p>
+              </article>
+              <div class="slide-controls" aria-label="Slide navigation">
+                <button class="active" data-slide="0" aria-label="Show activation slide"></button>
+                <button data-slide="1" aria-label="Show question bank slide"></button>
+                <button data-slide="2" aria-label="Show exam bodies slide"></button>
+                <button data-slide="3" aria-label="Show premium slide"></button>
+              </div>
+            </section>
+
+            <section class="exam-strip" aria-label="Exam bodies">
+              <button class="exam-pill active" data-open-exam="JAMB" data-testid="open-jamb">JAMB</button>
+              <button class="exam-pill" data-open-exam="WAEC" data-testid="open-waec">WAEC</button>
+              <button class="exam-pill" data-open-exam="NECO" data-testid="open-neco">NECO</button>
+            </section>
+
+            <section class="quick-grid" aria-label="Main actions">
+              <button class="quick-card simulation" data-open-exam="JAMB">
+                <span class="card-icon"><img src="assets/icons/Test.svg" alt="" /></span>
+                <span class="card-title">CBT Simulation</span>
+                <span class="card-copy">JAMB: 4 subjects, 180 questions, 2 hours.</span>
+              </button>
+              <button class="quick-card questions" data-page="study">
+                <span class="card-icon"><img src="assets/icons/Study.svg" alt="" /></span>
+                <span class="card-title">Past Questions</span>
+                <span class="card-copy">Study by subject before starting a full test.</span>
+              </button>
+            </section>
+
+            <button class="study-card" data-page="study" aria-label="Continue Biology">
+              <span class="study-icon"><img src="assets/icons/Chart.svg" alt="" /></span>
+              <span class="study-main">
+                <small>Loaded question bank</small>
+                <strong id="home-bank-count">Preparing question index...</strong>
+                <span class="progress-track"><span style="width: 72%"></span></span>
+              </span>
+              <b>Ready</b>
+            </button>
+          </section>
+
+          <section class="page" data-view="study">
+            <div class="page-title">
+              <span>Study</span>
+              <h1>Filter past questions without the clutter.</h1>
+            </div>
+            <section class="filter-panel">
+              <label>Exam body <select id="study-exam" aria-label="Study exam body"></select></label>
+              <label>Subject <select id="study-subject" aria-label="Study subject"></select></label>
+              <div class="filter-grid">
+                <label>Year <select id="study-year" aria-label="Study year"></select></label>
+                <label>Type <select id="study-type" aria-label="Study question type"></select></label>
+              </div>
+              <label>Topic <select id="study-topic" aria-label="Study topic"></select></label>
+              <label>Search key <input id="study-search" class="search-input" type="search" placeholder="Question text, option, answer, or ID" aria-label="Search exact question" /></label>
+              <div class="study-filter-actions">
+                <button class="primary-action" id="apply-study-filter">Load Question</button>
+                <button class="secondary-action" id="study-calculator-toggle">Calculator</button>
+              </div>
+            </section>
+            <section class="study-question" id="study-question">
+              <p>Loading subjects...</p>
+            </section>
+          </section>
+
+          <section class="page exam-setup" data-view="jamb">
+            <div class="page-title">
+              <span>JAMB Simulation</span>
+              <h1>Select up to 4 subjects. English is compulsory.</h1>
+            </div>
+            <section class="setup-card">
+              <div class="setup-row">
+                <span>
+                  <strong>Subjects</strong>
+                  <small id="jamb-subject-summary">English Language selected</small>
+                </span>
+                <button class="select-trigger" data-subject-menu="JAMB" data-testid="choose-jamb-subjects">Choose</button>
+              </div>
+              <div class="subject-menu" data-menu="JAMB"></div>
+              <div class="setup-meta">
+                <span>180 questions</span>
+                <span>Focus mode</span>
+                <span>No dock during exam</span>
+              </div>
+              <button class="primary-action" data-start-exam="JAMB">Start JAMB CBT</button>
+            </section>
+          </section>
+
+          <section class="page exam-setup" data-view="waec">
+            <div class="page-title">
+              <span>WAEC Simulation</span>
+              <h1>Select one subject paper for a timed objective test.</h1>
+            </div>
+            <section class="setup-card">
+              <label class="field-label" for="waec-subject">Subject</label>
+              <select id="waec-subject" class="wide-select"></select>
+              <div class="setup-meta">
+                <span>50 questions</span>
+                <span>60 minutes</span>
+                <span>Objective practice</span>
+              </div>
+              <button class="primary-action" data-start-exam="WAEC">Start WAEC CBT</button>
+            </section>
+          </section>
+
+          <section class="page exam-setup" data-view="neco">
+            <div class="page-title">
+              <span>NECO Simulation</span>
+              <h1>Select one subject paper for a timed objective test.</h1>
+            </div>
+            <section class="setup-card">
+              <label class="field-label" for="neco-subject">Subject</label>
+              <select id="neco-subject" class="wide-select"></select>
+              <div class="setup-meta">
+                <span>50 questions</span>
+                <span>60 minutes</span>
+                <span>Objective practice</span>
+              </div>
+              <button class="primary-action" data-start-exam="NECO">Start NECO CBT</button>
+            </section>
+          </section>
+
+          <section class="page" data-view="simulation">
+            <section class="sim-header">
+              <span id="sim-exam-label">JAMB</span>
+              <strong id="timer">02:00:00</strong>
+              <button id="calculator-toggle" aria-label="Open calculator">
+                <img src="assets/icons/Calculator.svg" alt="" />
+              </button>
+              <button id="quit-exam" class="quit-button" aria-label="Quit exam">Quit</button>
+            </section>
+            <section class="subject-tabs" id="subject-tabs" aria-label="Exam subject tabs"></section>
+            <section class="question-card">
+              <div class="question-meta">
+                <span id="question-count">Question 1 of 180</span>
+                <span id="question-subject">English Language</span>
+              </div>
+              <div class="question-text" id="question-text"></div>
+              <div class="question-images" id="question-images"></div>
+              <div class="option-list" id="option-list"></div>
+            </section>
+            <section class="question-nav" id="question-nav"></section>
+            <section class="sim-actions">
+              <button id="prev-question">Previous</button>
+              <button id="next-question">Next</button>
+              <button id="submit-exam">Submit</button>
+            </section>
+          </section>
+
+          <section class="page" data-view="result">
+            <section class="result-card">
+              <span>Result</span>
+              <h1 id="score-title">0 / 0</h1>
+              <p id="score-copy">Complete a simulation to see your score.</p>
+              <div class="result-meta" id="result-meta"></div>
+              <button class="primary-action" id="review-exam">Reveal Answers</button>
+              <button class="secondary-action" data-page="home">Back Home</button>
+            </section>
+            <section class="subject-breakdown" id="subject-breakdown"></section>
+          </section>
+
+          <section class="page" data-view="review">
+            <section class="sim-header review-header">
+              <span id="review-exam-label">JAMB Review</span>
+              <strong id="review-score-mini">0 / 0</strong>
+              <button id="review-back-result" aria-label="Back to result">x</button>
+            </section>
+            <section class="question-card review-card">
+              <div class="question-meta">
+                <span id="review-question-count">Question 1 of 180</span>
+                <span id="review-question-subject">English Language</span>
+              </div>
+              <div class="review-status" id="review-status"></div>
+              <div class="question-text" id="review-question-text"></div>
+              <div class="question-images" id="review-question-images"></div>
+              <div class="option-list review-options" id="review-option-list"></div>
+              <button class="primary-action" id="reveal-review-answer">See Solution</button>
+            </section>
+            <section class="question-nav" id="review-question-nav"></section>
+            <section class="sim-actions">
+              <button id="prev-review-question">Previous</button>
+              <button id="next-review-question">Next</button>
+              <button id="review-to-result">Result</button>
+            </section>
+          </section>
+
+          <section class="page" data-view="history">
+            <div class="page-title">
+              <span>History</span>
+              <h1>Your finished simulations and review trail.</h1>
+            </div>
+            <section class="history-list" id="history-list">
+              <p>No exams submitted yet.</p>
+            </section>
+          </section>
+
+          <section class="page" data-view="account">
+            <div class="page-title">
+              <span>Account</span>
+              <h1>Your device, progress, and study setup.</h1>
+            </div>
+            <section class="profile-card">
+              <span class="profile-avatar">B</span>
+              <span>
+                <strong>Beason Student</strong>
+                <small>Mobile prep workspace</small>
+              </span>
+              <b>Pro</b>
+            </section>
+            <section class="settings-list">
+              <button class="setting-row" data-setting="largeText">
+                <span><strong>Larger exam text</strong><small>Increase question and option size for long reading passages.</small></span>
+                <i class="switch active"></i>
+              </button>
+              <button class="setting-row" data-setting="compactCards">
+                <span><strong>Compact cards</strong><small>Fit more question content on small Android screens.</small></span>
+                <i class="switch"></i>
+              </button>
+              <button class="setting-row" data-setting="autoNext">
+                <span><strong>Auto-next after picking</strong><small>Move to the next CBT question after selecting an answer.</small></span>
+                <i class="switch"></i>
+              </button>
+              <button class="setting-row" data-setting="showTimer">
+                <span><strong>Show timer</strong><small>Hide or show the live exam countdown in focus mode.</small></span>
+                <i class="switch active"></i>
+              </button>
+            </section>
+          </section>
+        </div>
+
+        <section class="calculator" id="calculator" aria-label="Calculator">
+          <div class="calc-top">
+            <input id="calc-display" value="0" readonly />
+            <button id="calculator-close" aria-label="Close calculator">x</button>
+          </div>
+          <div class="calc-grid">
+            <button data-calc="clear">C</button><button data-calc="back">Del</button><button data-calc="%">%</button><button data-calc="/">/</button>
+            <button data-calc="7">7</button><button data-calc="8">8</button><button data-calc="9">9</button><button data-calc="*">*</button>
+            <button data-calc="4">4</button><button data-calc="5">5</button><button data-calc="6">6</button><button data-calc="-">-</button>
+            <button data-calc="1">1</button><button data-calc="2">2</button><button data-calc="3">3</button><button data-calc="+">+</button>
+            <button data-calc="0">0</button><button data-calc=".">.</button><button data-calc="=">=</button>
+          </div>
+        </section>
+
+        <section class="answer-sheet" id="answer-sheet" aria-label="Answer and explanation" aria-hidden="true">
+          <div class="answer-backdrop" data-close-answer></div>
+          <article class="answer-panel">
+            <header class="answer-head">
+              <span>Study Helper</span>
+              <button data-close-answer aria-label="Close answer"><b>x</b> Close</button>
+            </header>
+            <h2 id="answer-title">Answer + Explanation</h2>
+            <p id="answer-subtitle">Review the prompt, answer key, and explanation below.</p>
+            <section class="answer-prompt" id="answer-prompt"></section>
+            <section class="answer-facts">
+              <article>
+                <span id="answer-key-label">Correct Option</span>
+                <strong id="answer-key">A</strong>
+              </article>
+              <article>
+                <span>Question Type</span>
+                <strong id="answer-type">Objective</strong>
+              </article>
+            </section>
+            <section class="answer-explanation">
+              <h3 id="answer-reason-title">Why this is correct</h3>
+              <div id="answer-explanation"></div>
+            </section>
+          </article>
+        </section>
+
+        <nav class="floating-dock" aria-label="Primary navigation">
+          <button class="active" data-page="home" aria-label="Home"><img src="assets/icons/Home.svg" alt="" /></button>
+          <button data-page="study" aria-label="Study"><img src="assets/icons/Study.svg" alt="" /></button>
+          <button data-page="history" aria-label="History"><img src="assets/icons/Activity.svg" alt="" /></button>
+          <button class="start-action" data-open-exam="JAMB" aria-label="Start"><span>Start</span><i><img src="assets/icons/Arrow-Right.svg" alt="" /></i></button>
+        </nav>
+      </section>
+    </main>
+    <script src="script.js?v=beason-20260425-final2"></script>
+  </body>
+</html>
