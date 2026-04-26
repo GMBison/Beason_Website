@@ -5,6 +5,7 @@
   const mainNav = document.getElementById("mainNav");
   const tickerTrack = document.getElementById("tickerTrack");
   const pricingTabs = document.getElementById("pricingTabs");
+  const platformGrid = document.getElementById("platformGrid");
   const welcomeOverlay = document.getElementById("welcomeOverlay");
   const enterSiteBtn = document.getElementById("enterSiteBtn");
   const revealItems = document.querySelectorAll(".reveal");
@@ -105,6 +106,89 @@
 
     syncPricingLayout();
     window.addEventListener("resize", syncPricingLayout);
+  }
+
+  if (platformGrid) {
+    const downloadLinks = {
+      windows: "https://mega.nz/file/mF0FFSBZ#hodmbPPFTq0w1Q2gWHrI_Hhzpwoy-pT_mCXpb2U-WK0",
+      android: "https://mega.nz/file/CJF1nJiS#d6LEYPY0mDd2bT6QrcJIZH80YR5TyO1A4oE6t49rJh4"
+    };
+    const labels = {
+      windows: "Windows",
+      ios: "iOS",
+      android: "Android",
+      mac: "Mac"
+    };
+    const statusText = {
+      windows: "The Windows installer is ready. Use the download button to open the official Windows build.",
+      android: "The Android public beta is ready. Use the download button to open the official Android build.",
+      ios: "Sorry, Beason CBT is not available for iOS yet.",
+      mac: "Sorry, Beason CBT is not available for Mac yet."
+    };
+
+    const platformCards = platformGrid.querySelectorAll(".platform-card");
+    const downloadActions = document.querySelectorAll("[data-download-action]");
+    const downloadStatus = document.getElementById("downloadStatus");
+    const floatingDownloadStatus = document.getElementById("floatingDownloadStatus");
+    let selectedPlatform = "windows";
+
+    const syncDownloadButtons = () => {
+      const availableLink = downloadLinks[selectedPlatform];
+
+      downloadActions.forEach((link) => {
+        link.textContent = availableLink ? `Download ${labels[selectedPlatform]}` : `Download ${labels[selectedPlatform]}`;
+        link.href = availableLink || "#";
+        if (availableLink) {
+          link.setAttribute("target", "_blank");
+          link.setAttribute("rel", "noopener noreferrer");
+        } else {
+          link.removeAttribute("target");
+          link.removeAttribute("rel");
+        }
+      });
+
+      if (downloadStatus) downloadStatus.textContent = statusText[selectedPlatform];
+      if (floatingDownloadStatus) floatingDownloadStatus.textContent = availableLink
+        ? `Use the official ${labels[selectedPlatform]} download link to continue.`
+        : statusText[selectedPlatform];
+    };
+
+    const selectPlatform = (platform) => {
+      selectedPlatform = platform;
+
+      platformCards.forEach((card) => {
+        const active = card.dataset.platform === platform;
+        card.classList.toggle("selected", active);
+        card.setAttribute("aria-pressed", String(active));
+      });
+
+      syncDownloadButtons();
+    };
+
+    platformCards.forEach((card) => {
+      const chooseCard = () => selectPlatform(card.dataset.platform);
+
+      card.addEventListener("click", (event) => {
+        if (event.target.closest("a")) return;
+        chooseCard();
+      });
+
+      card.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        chooseCard();
+      });
+    });
+
+    downloadActions.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        if (downloadLinks[selectedPlatform]) return;
+        event.preventDefault();
+        window.alert(statusText[selectedPlatform]);
+      });
+    });
+
+    syncDownloadButtons();
   }
 
   if (!reduceMotion) {

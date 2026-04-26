@@ -234,6 +234,7 @@ h1,h2,h3,p { margin-top: 0; }
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  cursor: pointer;
 }
 
 .platform-card::before {
@@ -259,8 +260,14 @@ h1,h2,h3,p { margin-top: 0; }
   opacity: 1;
 }
 
-.platform-card.ready {
+.platform-card.ready,
+.platform-card.selected {
   background: linear-gradient(180deg, rgba(35, 97, 182, 0.88), rgba(10, 34, 58, 0.95));
+}
+
+.platform-card:focus-visible {
+  outline: 3px solid rgba(100, 197, 255, 0.75);
+  outline-offset: 4px;
 }
 
 .platform-card h3 {
