@@ -32,6 +32,7 @@ const state = {
   remaining: 0,
   calcValue: "0",
   studyPool: [],
+  studyIndex: 0,
   currentStudyQuestion: null,
 };
 
@@ -188,7 +189,11 @@ function allQuestionImages(question) {
 }
 
 function questionImageTag(src, alt = "Question image") {
-  return `<img src="${src}" alt="${alt}" loading="lazy" onerror="this.remove()" />`;
+  const path = String(src || "");
+  const resolved = path.startsWith("http") || path.startsWith("/trybeason/")
+    ? path
+    : `/trybeason/${path.replace(/^\/+/, "")}`;
+  return `<img src="${resolved}" alt="${alt}" loading="lazy" onerror="this.remove()" />`;
 }
 
 function questionSearchText(question) {
@@ -358,7 +363,7 @@ async function loadSubjectQuestions(exam, slug) {
   return data;
 }
 
-async function renderStudyQuestion() {
+async function renderStudyQuestion(direction = 0) {
   const box = document.querySelector("#study-question");
   const exam = document.querySelector("#study-exam").value;
   const slug = document.querySelector("#study-subject").value;
@@ -383,22 +388,46 @@ async function renderStudyQuestion() {
     box.innerHTML = "<p>No question matches those filters. Try another year, type, topic, or search key.</p>";
     return;
   }
-  state.studyPool = filtered;
-  const question = search ? filtered[0] : filtered[Math.floor(Math.random() * filtered.length)];
+  const filtersChanged = state.studyExam !== exam
+    || state.studySubject !== slug
+    || state.studyYear !== year
+    || state.studyType !== type
+    || state.studyTopic !== topic
+    || state.studySearch !== search;
+  if (filtersChanged) {
+    state.studyPool = search ? filtered : shuffle(filtered);
+    state.studyIndex = 0;
+    state.studyExam = exam;
+    state.studySubject = slug;
+    state.studyYear = year;
+    state.studyType = type;
+    state.studyTopic = topic;
+    state.studySearch = search;
+  } else if (direction) {
+    state.studyIndex = (state.studyIndex + direction + state.studyPool.length) % state.studyPool.length;
+  }
+  const question = state.studyPool[state.studyIndex] || filtered[0];
   state.currentStudyQuestion = question;
+  const isObj = question.type === "obj" && question.options?.some((option) => String(option || "").trim());
+  const images = allQuestionImages(question);
   box.innerHTML = `
     <small>${state.index.exams[exam]?.label || exam} - ${question.subject} - ${question.year || "Past question"} - ${question.type} - ID ${question.id}</small>
     ${search ? `<span class="search-hit">${filtered.length.toLocaleString()} match${filtered.length === 1 ? "" : "es"} found</span>` : ""}
     <div class="study-q">${safeHtml(question.q)}</div>
-    <div class="question-images">${allQuestionImages(question).map((src) => questionImageTag(src)).join("")}</div>
-    <div class="study-options">${question.options
+    ${images.length ? `<div class="question-images">${images.map((src) => questionImageTag(src)).join("")}</div>` : ""}
+    ${isObj ? `<div class="study-options">${question.options
       .map((option, index) => `<p><b>${"ABCDE"[index]}.</b> ${safeHtml(option)}</p>`)
-      .join("")}</div>
+      .join("")}</div>` : `<p class="theory-note">Theory question: write your answer first, then compare with the guide.</p>`}
+    <div class="study-stepper" aria-label="Study question navigation">
+      <button class="study-nav-button" id="prev-study-question" aria-label="Previous question">‹</button>
+      <span>${state.studyIndex + 1} / ${state.studyPool.length}</span>
+      <button class="study-nav-button" id="next-study-question" aria-label="Next question">›</button>
+    </div>
     <button class="primary-action" id="show-study-answer">Show Answer</button>
-    <button class="secondary-action" id="next-study-question">Next Question</button>
   `;
   document.querySelector("#show-study-answer").addEventListener("click", () => openAnswerSheet(question));
-  document.querySelector("#next-study-question").addEventListener("click", renderStudyQuestion);
+  document.querySelector("#prev-study-question").addEventListener("click", () => renderStudyQuestion(-1));
+  document.querySelector("#next-study-question").addEventListener("click", () => renderStudyQuestion(1));
 }
 
 function openAnswerSheet(question) {
