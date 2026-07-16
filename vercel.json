@@ -3,6 +3,10 @@
     {
       "source": "/trybeason",
       "destination": "/trybeason/index.html"
+    },
+    {
+      "source": "/download",
+      "destination": "/download.html"
     }
   ]
 }
