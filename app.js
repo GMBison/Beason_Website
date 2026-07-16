@@ -111,7 +111,7 @@
   if (platformGrid) {
     const downloadLinks = {
       windows: "https://mega.nz/file/mF0FFSBZ#hodmbPPFTq0w1Q2gWHrI_Hhzpwoy-pT_mCXpb2U-WK0",
-      android: "https://mega.nz/file/CJF1nJiS#d6LEYPY0mDd2bT6QrcJIZH80YR5TyO1A4oE6t49rJh4"
+      android: "https://github.com/GMBison/Beason_Website/raw/refs/heads/agent/publish-beason-mobile-v3-1-23/downloads/Beason-CBT-v3.1.23.apk"
     };
     const labels = {
       windows: "Windows",
