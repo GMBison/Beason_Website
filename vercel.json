@@ -5,8 +5,24 @@
       "destination": "/trybeason/index.html"
     },
     {
+      "source": "/database",
+      "destination": "/database.html"
+    },
+    {
+      "source": "/features",
+      "destination": "/features.html"
+    },
+    {
+      "source": "/pricing",
+      "destination": "/pricing.html"
+    },
+    {
       "source": "/download",
       "destination": "/download.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact.html"
     }
   ]
 }
